@@ -31,7 +31,7 @@ import (
 	"github.com/ajbeattie/octobud/backend/internal/core/repository"
 	"github.com/ajbeattie/octobud/backend/internal/core/sync"
 	"github.com/ajbeattie/octobud/backend/internal/db"
-	"github.com/ajbeattie/octobud/backend/internal/github/interfaces"
+	githubinterfaces "github.com/ajbeattie/octobud/backend/internal/github/interfaces"
 	githubmocks "github.com/ajbeattie/octobud/backend/internal/github/mocks"
 	"github.com/ajbeattie/octobud/backend/internal/github/types"
 )
@@ -47,7 +47,7 @@ func mockClock() time.Time {
 func setupSyncService(
 	_ *testing.T,
 	dbConn *sql.DB,
-	mockClient interfaces.Client,
+	mockClient githubinterfaces.Client,
 	opts ...SyncOption,
 ) *SyncService {
 	queries := db.New(dbConn)

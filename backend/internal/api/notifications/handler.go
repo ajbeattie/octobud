@@ -25,7 +25,7 @@ import (
 	timelinesvc "github.com/ajbeattie/octobud/backend/internal/core/timeline"
 	"github.com/ajbeattie/octobud/backend/internal/db"
 	"github.com/ajbeattie/octobud/backend/internal/github"
-	"github.com/ajbeattie/octobud/backend/internal/github/interfaces"
+	githubinterfaces "github.com/ajbeattie/octobud/backend/internal/github/interfaces"
 )
 
 // Handler handles notification-related HTTP routes
@@ -36,7 +36,7 @@ type Handler struct {
 	repositorySvc repository.RepositoryService
 	tagSvc        tag.TagService
 	timelineSvc   *timelinesvc.Service
-	githubClient  interfaces.Client
+	githubClient  githubinterfaces.Client
 	syncService   *github.SyncService
 	riverClient   db.RiverClient
 }
@@ -49,7 +49,7 @@ func New(
 	repositorySvc repository.RepositoryService,
 	tagSvc tag.TagService,
 	timelineSvc *timelinesvc.Service,
-	githubClient interfaces.Client,
+	githubClient githubinterfaces.Client,
 	syncService *github.SyncService,
 	riverClient db.RiverClient,
 ) *Handler {

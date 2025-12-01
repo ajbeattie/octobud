@@ -35,11 +35,6 @@ vi.mock("$lib/api/views", () => ({
 	fetchViews: vi.fn(),
 }));
 
-// Mock service worker
-vi.mock("../../utils/serviceWorkerRegistration", () => ({
-	markNotificationsSeenInSW: vi.fn(),
-}));
-
 describe("ViewActionController", () => {
 	let notificationStore: NotificationStore;
 	let paginationStore: PaginationStore;

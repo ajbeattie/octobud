@@ -172,6 +172,23 @@ func spaHandler(fsys fs.FS, fileServer http.Handler) http.HandlerFunc {
 			path = "index.html"
 		}
 
+		// Service worker must be served with correct MIME type
+		if path == "sw.js" {
+			// Try to open the file
+			f, err := fsys.Open(path)
+			if err == nil {
+				_ = f.Close() // Ignore error - just checking if file exists
+				// Set cache headers and MIME type for service worker
+				setCacheHeaders(w, path)
+				w.Header().Set("Content-Type", "application/javascript; charset=utf-8")
+				fileServer.ServeHTTP(w, r)
+				return
+			}
+			// Service worker not found
+			http.NotFound(w, r)
+			return
+		}
+
 		// Try to open the file
 		f, err := fsys.Open(path)
 		if err == nil {

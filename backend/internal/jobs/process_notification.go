@@ -23,7 +23,7 @@ import (
 	"github.com/riverqueue/river"
 
 	"github.com/ajbeattie/octobud/backend/internal/db"
-	"github.com/ajbeattie/octobud/backend/internal/github/interfaces"
+	githubinterfaces "github.com/ajbeattie/octobud/backend/internal/github/interfaces"
 	"github.com/ajbeattie/octobud/backend/internal/github/types"
 )
 
@@ -47,13 +47,13 @@ type ProcessNotificationWorker struct {
 	river.WorkerDefaults[ProcessNotificationArgs]
 	dbConn      *sql.DB
 	queries     *db.Queries
-	syncService interfaces.SyncOperations
+	syncService githubinterfaces.SyncOperations
 }
 
 // NewProcessNotificationWorker creates a new ProcessNotificationWorker.
 func NewProcessNotificationWorker(
 	dbConn *sql.DB,
-	syncService interfaces.SyncOperations,
+	syncService githubinterfaces.SyncOperations,
 ) *ProcessNotificationWorker {
 	return &ProcessNotificationWorker{
 		dbConn:      dbConn,

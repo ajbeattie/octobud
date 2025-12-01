@@ -26,7 +26,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ajbeattie/octobud/backend/internal/github/interfaces"
+	githubinterfaces "github.com/ajbeattie/octobud/backend/internal/github/interfaces"
 	"github.com/ajbeattie/octobud/backend/internal/github/types"
 )
 
@@ -44,7 +44,7 @@ type clientImpl struct {
 }
 
 // NewClient constructs an HTTP-backed GitHub client.
-func NewClient() interfaces.Client {
+func NewClient() githubinterfaces.Client {
 	return &clientImpl{
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
@@ -97,7 +97,7 @@ func (c *clientImpl) validateToken(ctx context.Context) error {
 }
 
 // WithPerPage allows the page size to be adjusted for fetching notifications.
-func (c *clientImpl) WithPerPage(perPage int) interfaces.Client {
+func (c *clientImpl) WithPerPage(perPage int) githubinterfaces.Client {
 	if perPage > 0 {
 		c.perPage = perPage
 	}

@@ -37,7 +37,7 @@ import (
 	"github.com/ajbeattie/octobud/backend/internal/core/view"
 	"github.com/ajbeattie/octobud/backend/internal/db"
 	"github.com/ajbeattie/octobud/backend/internal/github"
-	"github.com/ajbeattie/octobud/backend/internal/github/interfaces"
+	githubinterfaces "github.com/ajbeattie/octobud/backend/internal/github/interfaces"
 )
 
 // Handler wires HTTP routes to database-backed operations.
@@ -46,7 +46,7 @@ type Handler struct {
 	queries        *db.Queries
 	notifications  *notification.Service
 	syncService    *github.SyncService
-	githubClient   interfaces.Client
+	githubClient   githubinterfaces.Client
 	timelineSvc    *timelinesvc.Service
 	riverClient    db.RiverClient
 	notificationsH *notifications.Handler
@@ -61,7 +61,7 @@ type HandlerOption func(*Handler)
 
 // WithSyncService configures the handler with a sync service for refreshing subject data.
 // This enables the refresh-subject endpoint for notifications.
-func WithSyncService(dbConn *sql.DB, githubClient interfaces.Client) HandlerOption {
+func WithSyncService(dbConn *sql.DB, githubClient githubinterfaces.Client) HandlerOption {
 	return func(h *Handler) {
 		queries := db.New(dbConn)
 		syncSvc := syncsvc.NewService(queries)

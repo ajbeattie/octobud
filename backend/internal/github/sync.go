@@ -31,7 +31,7 @@ import (
 	"github.com/ajbeattie/octobud/backend/internal/core/repository"
 	"github.com/ajbeattie/octobud/backend/internal/core/sync"
 	"github.com/ajbeattie/octobud/backend/internal/db"
-	"github.com/ajbeattie/octobud/backend/internal/github/interfaces"
+	githubinterfaces "github.com/ajbeattie/octobud/backend/internal/github/interfaces"
 	"github.com/ajbeattie/octobud/backend/internal/github/types"
 	"github.com/ajbeattie/octobud/backend/internal/models"
 )
@@ -54,7 +54,7 @@ var (
 
 // SyncService coordinates fetching notifications from GitHub and persisting them.
 type SyncService struct {
-	client             interfaces.Client
+	client             githubinterfaces.Client
 	clock              func() time.Time
 	logger             *zap.Logger
 	syncService        *sync.Service
@@ -86,7 +86,7 @@ func WithLogger(logger *zap.Logger) SyncOption {
 
 // NewSyncService assembles a SyncService with the provided dependencies.
 func NewSyncService(
-	client interfaces.Client,
+	client githubinterfaces.Client,
 	syncService *sync.Service,
 	repositoryService *repository.Service,
 	pullRequestService *pullrequest.Service,
@@ -111,7 +111,7 @@ func NewSyncService(
 }
 
 // GitHubClient returns the GitHub client used by this service.
-func (s *SyncService) GitHubClient() interfaces.Client {
+func (s *SyncService) GitHubClient() githubinterfaces.Client {
 	return s.client
 }
 

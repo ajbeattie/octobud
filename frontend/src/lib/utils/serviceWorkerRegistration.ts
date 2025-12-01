@@ -253,32 +253,6 @@ export async function sendNotificationSettingToSW(enabled: boolean): Promise<voi
 	});
 }
 
-// Mark notifications as seen in service worker
-// Only marks as seen when the page is actually visible to the user
-// This prevents marking notifications as seen when the user is on a different workspace
-// or the tab is hidden, allowing the service worker to show desktop notifications
-export async function markNotificationsSeenInSW(notificationIds: string[]): Promise<void> {
-	// Only mark as seen if the page is visible
-	// This ensures we don't mark notifications as seen when the user isn't actively viewing
-	// The service worker will handle showing desktop notifications for unseen items
-	if (typeof document !== "undefined" && document.hidden) {
-		debugLog(
-			"[SW Registration] Skipping mark as seen - page is hidden (document.hidden:",
-			document.hidden,
-			")"
-		);
-		// Still send a message to wake up the SW and trigger its polling
-		// This ensures the SW shows desktop notifications even if it was terminated
-		await sendMessageToSW({ type: "FORCE_POLL" });
-		return;
-	}
-
-	await sendMessageToSW({
-		type: "MARK_SEEN",
-		notificationIds,
-	});
-}
-
 // Force service worker to poll immediately
 export async function forceSWPoll(): Promise<void> {
 	await sendMessageToSW({ type: "FORCE_POLL" });

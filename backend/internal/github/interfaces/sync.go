@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// Package interfaces defines interfaces for GitHub operations.
-package interfaces //nolint:revive // Sigh.
+// Package githubinterfaces defines interfaces for GitHub operations.
+package githubinterfaces
 
 import (
 	"context"

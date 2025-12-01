@@ -50,8 +50,6 @@
 	import { registerListShortcuts } from "$lib/keyboard/listShortcuts";
 	import { registerCommand, unregisterCommand } from "$lib/keyboard/commandRegistry";
 	import type { CommandContext } from "$lib/keyboard/commandRegistry";
-	import { browser } from "$app/environment";
-	import { markNotificationsSeenInSW } from "$lib/utils/serviceWorkerRegistration";
 
 	// Composables
 	import { debugLog } from "$lib/utils/debug";
@@ -144,15 +142,6 @@
 		lastData = data;
 		// Sync page controller with fresh data
 		pageController.actions.syncFromData(data);
-
-		// Mark initial notifications as seen in service worker to prevent desktop notifications for existing items
-		// The markNotificationsSeenInSW function now checks document visibility internally
-		// This prevents marking notifications as seen when the user is on a different workspace
-		const initialNotifications = data.initialPage?.items ?? [];
-		if (browser && initialNotifications.length > 0) {
-			const notificationIds = initialNotifications.map((n) => String(n.githubId ?? n.id));
-			void markNotificationsSeenInSW(notificationIds);
-		}
 
 		// Only clear selection when navigating to a different view, not on refresh
 		if (viewChanged) {

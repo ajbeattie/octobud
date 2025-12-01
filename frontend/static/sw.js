@@ -886,11 +886,6 @@ self.addEventListener('message', async (event) => {
             // If polling was active, just trigger an immediate poll
             pollForUpdates();
         }
-    } else if (event.data.type === 'MARK_SEEN') {
-        // MARK_SEEN is deprecated - effectiveSortDate comparison handles detection now
-        // Still accept the message to avoid errors, but do nothing
-        debugLog('[SW] MARK_SEEN message received (deprecated, using effectiveSortDate comparison)');
-        if (needsPollingRestart) startPolling(true);
     } else if (event.data.type === 'NOTIFICATION_PERMISSION') {
         // Update permission status from main app
         notificationPermission = event.data.permission || 'default';

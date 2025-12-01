@@ -22,7 +22,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/ajbeattie/octobud/backend/internal/github/interfaces"
+	githubinterfaces "github.com/ajbeattie/octobud/backend/internal/github/interfaces"
 	"github.com/ajbeattie/octobud/backend/internal/github/types"
 	"github.com/ajbeattie/octobud/backend/internal/models"
 )
@@ -76,7 +76,7 @@ var FilteredEventTypes = map[string]bool{
 type TimelineService interface {
 	FetchFilteredTimeline(
 		ctx context.Context,
-		client interfaces.Client,
+		client githubinterfaces.Client,
 		subjectInfo *types.SubjectInfo,
 		perPage, page int,
 	) (*models.TimelineResult, error)
@@ -110,7 +110,7 @@ func SupportsTimeline(subjectType string) bool {
 // intelligently fetching multiple pages if needed to satisfy pagination requirements.
 func (s *Service) FetchFilteredTimeline(
 	ctx context.Context,
-	client interfaces.Client,
+	client githubinterfaces.Client,
 	subjectInfo *types.SubjectInfo,
 	perPage, page int,
 ) (*models.TimelineResult, error) {
@@ -163,7 +163,7 @@ func (s *Service) FetchFilteredTimeline(
 // filtering out unwanted event types and requesting more events if needed.
 func fetchAndFilterTimelineEvents(
 	ctx context.Context,
-	client interfaces.Client,
+	client githubinterfaces.Client,
 	subjectInfo *types.SubjectInfo,
 	perPage, page int,
 ) ([]models.TimelineItem, error) {

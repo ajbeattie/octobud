@@ -24,7 +24,7 @@ import (
 	"github.com/riverqueue/river"
 
 	"github.com/ajbeattie/octobud/backend/internal/db"
-	"github.com/ajbeattie/octobud/backend/internal/github/interfaces"
+	githubinterfaces "github.com/ajbeattie/octobud/backend/internal/github/interfaces"
 )
 
 // SyncNotificationsArgs are the arguments for the SyncNotifications job.
@@ -44,13 +44,13 @@ func (SyncNotificationsArgs) InsertOpts() river.InsertOpts {
 // This job fetches notifications from GitHub and queues individual ProcessNotification jobs.
 type SyncNotificationsWorker struct {
 	river.WorkerDefaults[SyncNotificationsArgs]
-	syncService interfaces.SyncOperations
+	syncService githubinterfaces.SyncOperations
 	riverClient db.RiverClient
 }
 
 // NewSyncNotificationsWorker creates a new SyncNotificationsWorker.
 func NewSyncNotificationsWorker(
-	syncService interfaces.SyncOperations,
+	syncService githubinterfaces.SyncOperations,
 	client db.RiverClient,
 ) *SyncNotificationsWorker {
 	return &SyncNotificationsWorker{

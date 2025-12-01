@@ -38,8 +38,6 @@ import type { ViewStore } from "../../stores/viewStore";
 import type { ControllerOptions } from "../interfaces/common";
 import type { SharedHelpers } from "./sharedHelpers";
 import type { DebounceManager } from "./debounceManager";
-import { markNotificationsSeenInSW } from "../../utils/serviceWorkerRegistration";
-import { browser } from "$app/environment";
 
 interface StoreCollection {
 	notificationStore: NotificationStore;
@@ -237,15 +235,6 @@ export function createViewActionController(
 			focusedNotificationId !== null
 				? refreshedItems.findIndex((n) => (n.githubId ?? n.id) === focusedNotificationId)
 				: -1;
-
-		// Mark all refreshed items as seen in service worker to prevent duplicate notifications
-		// The markNotificationsSeenInSW function now checks document visibility internally
-		// This prevents marking notifications as seen when the user is on a different workspace
-		// or the tab is hidden, allowing the service worker to show desktop notifications
-		if (browser && refreshedItems.length > 0) {
-			const notificationIds = refreshedItems.map((n) => String(n.githubId ?? n.id));
-			void markNotificationsSeenInSW(notificationIds);
-		}
 
 		// Restore keyboard focus if the notification is still on the page
 		if (refreshedFocusIndex !== -1) {
