@@ -1,0 +1,146 @@
+name: CI
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend-test:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: octobud_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.24'
+          cache-dependency-path: backend/go.sum
+
+      - name: Run tests
+        working-directory: backend
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/octobud_test?sslmode=disable
+        run: go test -race -coverprofile=coverage.out ./...
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v5
+        with:
+          file: backend/coverage.out
+          flags: backend
+        continue-on-error: true
+
+  frontend-test:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run type check
+        working-directory: frontend
+        run: npm run check
+
+      - name: Run tests
+        working-directory: frontend
+        run: npm test
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.24'
+          cache-dependency-path: backend/go.sum
+
+      - name: Cache Go tools
+        uses: actions/cache@v4
+        id: go-tools-cache
+        with:
+          path: ~/go/bin
+          # Increment this key when updating the Go tools.
+          key: ${{ runner.os }}-go-tools-v2
+          restore-keys: |
+            ${{ runner.os }}-go-tools-
+
+      - name: Install Go tools
+        working-directory: backend
+        run: make install-tools
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run frontend type check
+        working-directory: frontend
+        run: npm run check
+
+      - name: Check formatting
+        run: |
+          # Run format command
+          make format
+          
+          # Check if formatting changed anything
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "❌ Code formatting check failed!"
+            echo ""
+            echo "The following files were changed by 'make format':"
+            git diff --name-only
+            echo ""
+            echo "Please run 'make format' locally and commit the changes."
+            exit 1
+          fi
+          echo "✅ Code formatting is correct"
+
+      - name: Run golangci-lint
+        working-directory: backend
+        run: make lint
+
+      - name: Run ESLint
+        working-directory: frontend
+        run: npm run lint
+        continue-on-error: false
+

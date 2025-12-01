@@ -1,0 +1,35 @@
+# Build frontend assets
+FROM node:24-alpine AS frontend-builder
+WORKDIR /frontend
+COPY frontend/package*.json ./
+RUN npm ci
+COPY frontend/ ./
+RUN npm run build
+
+# Build Go binary
+FROM golang:1.24-alpine AS go-builder
+WORKDIR /app
+
+# Install build dependencies
+RUN apk add --no-cache git
+
+# Copy go mod files
+COPY backend/go.mod backend/go.sum ./
+RUN go mod download
+
+# Copy source code
+COPY backend/ ./
+
+# Copy built frontend into web/dist
+COPY --from=frontend-builder /frontend/build ./web/dist/
+
+# Build the binary
+RUN CGO_ENABLED=0 GOOS=linux go build -o /octobud-web ./cmd/frontend
+
+# Final minimal image
+FROM alpine:3.22
+RUN apk add --no-cache ca-certificates
+COPY --from=go-builder /octobud-web /usr/local/bin/octobud-web
+EXPOSE 3000
+ENTRYPOINT ["octobud-web"]
+
