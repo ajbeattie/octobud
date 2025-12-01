@@ -382,6 +382,18 @@ func (s *SyncService) RefreshSubjectData(ctx context.Context, githubID string) e
 		return errors.Join(ErrFailedToGetNotification, err)
 	}
 
+	// Skip refresh for CI activity and Discussions (no API endpoint available)
+	normalizedType := strings.ToLower(strings.ReplaceAll(notification.SubjectType, "_", ""))
+	if normalizedType == "checkrun" || normalizedType == "checksuite" ||
+		normalizedType == "discussion" {
+		s.logger.Debug(
+			"skipping subject refresh for unsupported type",
+			zap.String("githubID", githubID),
+			zap.String("subjectType", notification.SubjectType),
+		)
+		return ErrNotificationMissingSubjectURL // Return same error as missing URL for consistency
+	}
+
 	if !notification.SubjectUrl.Valid || notification.SubjectUrl.String == "" {
 		s.logger.Warn("notification has no subject URL", zap.String("githubID", githubID))
 		return ErrNotificationMissingSubjectURL

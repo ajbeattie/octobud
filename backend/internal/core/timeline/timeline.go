@@ -99,8 +99,6 @@ func SupportsTimeline(subjectType string) bool {
 		return true
 	case "issue":
 		return true
-	case "discussion":
-		return true
 	default:
 		return false
 	}

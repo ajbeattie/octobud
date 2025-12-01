@@ -2,17 +2,81 @@
 
 Octobud uses a query language to filter notifications. You can use queries in views, rules, and the search bar.
 
+**Note:** All search values use **contains matching** (not exact). For example, `repo:traefik` matches `traefik/traefik` or `traefik/other`.
+
 ## Basic Syntax
 
-Queries are made up of filters separated by spaces (implicit AND):
+### Combining Filters (Space-Separated)
+
+Put multiple filters together to narrow your search (logical AND):
 
 ```
 repo:owner/name is:unread type:PullRequest
 ```
 
-**Important:** All search terms and values in key-value pairs use **contains matching** (not exact matching). For example, `repo:traefik` will match any repository full name that contains "traefik", such as `traefik/traefik` or `traefik/other`.
+This finds: notifications from `owner/name` repository **AND** unread **AND** pull requests.
 
-## Available Filters
+### Multiple Options (Comma-Separated)
+
+Use commas within a field to match any of the options (logical OR):
+
+```
+repo:cli,other              # repo:cli OR repo:other
+reason:mention,review       # reason:mention OR reason:review
+tags:urgent,bug             # tags:urgent OR tags:bug
+```
+
+### Free Text Search
+
+Any text without a field prefix searches across title, repository, author, type, state, and PR/Issue number:
+
+```
+dependabot          # Matches title, author, etc.
+fix bug             # Multiple words (implicit AND)
+```
+
+### Negation
+
+Prefix any filter with `-` to negate it:
+
+```
+-is:read           # Not read (unread)
+-type:Issue        # Not an issue
+-repo:owner/name   # Not from this repo
+```
+
+## Advanced Querying
+
+### Explicit AND and OR
+
+You can use explicit `AND` and `OR` operators:
+
+```
+is:unread AND type:PullRequest
+type:PullRequest OR type:Issue
+```
+
+### Grouping with Parentheses
+
+Use parentheses to group conditions and control precedence:
+
+```
+(type:PullRequest OR type:Issue) is:unread
+(reason:mention OR reason:review_requested) AND is:unread
+NOT (author:bot OR author:dependabot)
+```
+
+**Operator precedence:** Parentheses → NOT → AND → OR
+
+### Complex Queries
+
+Combine all operators for sophisticated filtering:
+
+```
+((repo:cli AND is:unread) OR (in:snoozed AND repo:docs)) AND NOT author:bot
+```
+
+## Reference
 
 ### Status Filters (`is:`)
 
@@ -36,7 +100,7 @@ repo:owner/name is:unread type:PullRequest
 | `in:filtered` | Filtered/skipped inbox (notifications that were automatically filtered by rules and skipped the inbox) |
 | `in:anywhere` | All notifications (no location filter) |
 
-**Note:** Use `in:inbox,filtered` (equivalent to `in:inbox OR in:filtered`) to include notifications that have skipped the inbox due to rule automation. `in:inbox` queries only search the inbox, so filtered notifications won't appear unless you explicitly include them with `in:filtered` or `in:anywhere`.
+**Note:** Use `in:inbox,filtered` (equivalent to `in:inbox OR in:filtered`) to include notifications that have skipped the inbox due to rule automation.
 
 ### Type Filters (`type:`)
 
@@ -64,17 +128,12 @@ repo:owner/name is:unread type:PullRequest
 | `reason:state_change` | State changed |
 | `reason:ci_activity` | CI activity |
 
-### Repository Filters
+### Repository and Author Filters
 
 | Filter | Description |
 |--------|-------------|
-| `repo:owner/name` | Match repository (contains matching - e.g., `repo:traefik` matches `traefik/traefik` or `traefik/other`) |
-| `org:owner` | All repos in an organization (contains matching - matches owner/*) |
-
-### Author Filter
-
-| Filter | Description |
-|--------|-------------|
+| `repo:owner/name` | Match repository (contains matching) |
+| `org:owner` | All repos in an organization (contains matching) |
 | `author:username` | Filter by author (contains matching) |
 
 ### State Filters
@@ -96,78 +155,9 @@ repo:owner/name is:unread type:PullRequest
 
 ### Boolean Filters
 
-These can be used with values `true`/`false`, `yes`/`no`, or `1`/`0`:
+Use with `true`/`false`, `yes`/`no`, or `1`/`0`: `read:true`, `archived:true`, `muted:true`, `snoozed:true`, `filtered:true`
 
-| Filter | Description |
-|--------|-------------|
-| `read:true` | Read notifications |
-| `archived:true` | Archived notifications |
-| `muted:true` | Muted notifications |
-| `snoozed:true` | Currently snoozed |
-| `filtered:true` | Filtered notifications |
-
-### Free Text Search
-
-Any text without a field prefix searches across (using contains matching):
-- Notification title
-- Repository name
-- Author
-- Subject type
-- Subject state
-- PR/Issue number
-
-```
-dependabot          # Matches title, author, etc. (contains)
-fix bug             # Multiple words (AND, both contains)
-```
-
-## Negation
-
-Prefix any filter with `-` to negate it:
-
-```
--is:read           # Not read (unread)
--type:Issue        # Not an issue
--repo:owner/name   # Not from this repo
--author:dependabot # Not from dependabot
-```
-
-## Boolean Operators
-
-### AND (implicit)
-
-Filters separated by spaces are combined with AND:
-
-```
-is:unread type:PullRequest
-# Unread AND pull request
-```
-
-### AND (explicit)
-
-```
-is:unread AND type:PullRequest
-```
-
-### OR
-
-Use `OR` between filters:
-
-```
-type:PullRequest OR type:Issue
-# Pull requests OR issues
-```
-
-### Grouping
-
-Use parentheses for complex queries:
-
-```
-(type:PullRequest OR type:Issue) is:unread
-# (PR or issue) AND unread
-```
-
-## Examples
+## Example Queries
 
 ### Unread PR reviews
 
@@ -186,8 +176,6 @@ reason:mention in:anywhere
 ```
 org:my-company type:Issue is:unread
 ```
-
-Note: `org:my-company` uses contains matching, so it will match any organization name containing "my-company".
 
 ### Everything except CI notifications
 
@@ -219,8 +207,6 @@ type:PullRequest merged:true
 author:dependabot type:PullRequest
 ```
 
-Note: `author:dependabot` uses contains matching, so it will match authors like "dependabot" or "dependabot[bot]".
-
 ### Notifications with a specific tag
 
 ```
@@ -231,21 +217,19 @@ tags:urgent
 
 ```
 in:filtered
-```
-
-Shows notifications that were automatically filtered by rules and skipped the inbox. This is useful for reviewing what rules have filtered and ensuring important notifications aren't being hidden.
-
-```
 in:filtered type:PullRequest
+in:anywhere is:filtered  # Alternative syntax
 ```
 
-Shows filtered pull request notifications.
+Useful for reviewing what rules have filtered and ensuring important notifications aren't being hidden.
+
+### Complex queries
 
 ```
-in:anywhere is:filtered
+(reason:mention OR reason:review_requested) AND is:unread
+NOT (author:bot OR author:dependabot)
+((repo:cli AND is:unread) OR (in:snoozed AND repo:docs)) AND NOT author:bot
 ```
-
-Shows all filtered notifications regardless of their location (alternative syntax using `is:filtered`).
 
 ## Tips
 
@@ -254,4 +238,4 @@ Shows all filtered notifications regardless of their location (alternative synta
 3. **Try Negation** — Sometimes it's easier to exclude what you don't want
 4. **Combine with Rules** — Use queries in rules to auto-organize notifications
 5. **Review Filtered** — Periodically check `in:filtered` to ensure rules aren't hiding important notifications
-6. **Contains Matching** — All search terms and values use contains matching, not exact matching. For example, `repo:traefik` matches `traefik/traefik` or `traefik/other`, and `author:bot` matches `dependabot` or `github-actions[bot]`
+6. **Contains Matching** — All search values use contains matching, not exact matching

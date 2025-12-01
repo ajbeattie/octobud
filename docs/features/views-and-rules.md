@@ -4,7 +4,7 @@ Views and rules help you organize and automate your notification workflow.
 
 ## Views
 
-Views are saved queries that create filtered lists of notifications.
+Views are saved queries that create filtered lists of notifications. They appear in your sidebar for quick access.
 
 ### Built-in Views
 
@@ -12,15 +12,34 @@ Octobud comes with several default views:
 
 - **Inbox** — All notifications which haven't been archived, muted, snoozed, or routed to skip the inbox by a rule
 - **Starred** — Starred notifications
+- **Snoozed** - Currently snoozed notifications
 - **Archived** — Archived notifications
 - **Everything** — Everything, including muted notifications
 
-### Creating a View
+### Create a View from the search bar
+
+The easiest way to create a view:
+
+1. Type a query in the search bar (e.g., `in:inbox type:pullrequest reason:review_requested`)
+2. Click the **Save** button in the search bar and then click **Save as new view**
+3. Give it a name and **Save view**
+
+That's it! The view is now in your sidebar.
+
+**Example:** Create a view for PRs that need review:
+```
+in:inbox type:pullrequest reason:review_requested
+```
+
+### Creating a View (Detailed Steps)
+
+For more control when creating a view:
 
 1. Click the **Add** button in the sidebar, or click the **Save** button in the query input to start creating a new view based on the current query
 2. Enter a name for your view
 3. Write a query to filter notifications (see [Query Syntax](query-syntax.md))
-   - The query field is pre-populated with `in:inbox,filtered`, which includes both inbox and filtered notifications. This makes custom views good targets for skip inbox rules, as notifications that skip the inbox will still appear in your view.
+   - **Default query:** The query field is pre-populated with `in:inbox,filtered`
+   - **Note:** Custom views default to `in:inbox,filtered`, which includes both inbox and filtered notifications. This makes custom views good targets for skip inbox rules, as notifications that skip the inbox will still appear in your view.
 4. Choose an icon
 5. Click **Save**
 
@@ -54,13 +73,27 @@ org:my-company -is:archived
 
 ## Rules
 
-Rules automatically apply actions to notifications that match a query.
+Rules automatically apply actions to notifications that match a query. They help automate your workflow.
 
 ### How Rules Work
 
 When a new notification arrives, Octobud checks it against all enabled rules in order. If a notification matches a rule's query, the rule's actions are applied.
 
-### Creating a Rule
+### Creating a Simple Rule
+
+Start with a basic rule to see how they work:
+
+1. Go to **Settings** → **Rules** → **New Rule**
+2. Choose **Query-based**
+3. Enter a query (e.g., `author:dependabot`)
+4. Select an action (e.g., **Archive**)
+5. Click **Create rule**
+
+**Example:** Auto-archive all Dependabot notifications:
+- Query: `author:dependabot`
+- Action: Archive
+
+### Creating a Rule (Detailed Steps)
 
 1. Go to **Settings** → **Rules**
 2. Click **New Rule**
@@ -178,5 +211,5 @@ Tags help you categorize and organize notifications.
 2. **Use View-linked Rules** — When you want a view and rule to stay in sync
 3. **Use Rules Sparingly** — Too many rules can make behavior unpredictable
 4. **Test Queries First** — Test your query in the search bar before using in a rule
-5. **Review Filtered** — Periodically check the "Filtered" view to ensure rules aren't hiding important notifications
+5. **Review Filtered** — Periodically enter the `in:filtered` query in the search bar to ensure rules aren't unexpectedly hiding important notifications
 6. **Combine Tags and Rules** — Use rules to auto-tag, then create views based on tags

@@ -35,14 +35,14 @@ Before you begin, ensure you have the following installed:
 
 Docker handles all dependencies and configuration automatically. No Go or Node.js installation needed.
 
-### 1. Clone the Repository
+### 1. Clone and Configure
 
 ```bash
 git clone https://github.com/ajbeattie/octobud.git
 cd octobud
 ```
 
-### 2. Configure Environment Variables (Optional)
+### 2. Configure Environment (Optional)
 
 Copy the example environment file and add your GitHub token:
 
@@ -98,14 +98,12 @@ make docker-down
 
 Run services locally for faster development cycles when making code changes.
 
-### 1. Clone the Repository
+### 1. Clone and Setup
 
 ```bash
 git clone https://github.com/ajbeattie/octobud.git
 cd octobud
 ```
-
-### 2. Install Dependencies and Setup
 
 The setup command will install all dependencies and start the database:
 
@@ -141,10 +139,7 @@ JWT_SECRET=your_secure_random_secret_key_here  # Generate with: openssl rand -he
 - Or run `make ensure-jwt-secret` to generate it automatically
 
 **JWT Token Expiration:**
-- Default expiration: 7 days (168 hours)
-- Active users stay logged in automatically via token refresh
-- Service worker continues working even after long periods of tab inactivity
-- Inactive users (no activity for 7+ days) will need to log in again
+- Default: 7 days. Active users stay logged in automatically
 - Customize via `JWT_EXPIRY` environment variable (e.g., `JWT_EXPIRY=720h` for 30 days)
 
 ### 4. Start Services (in separate terminals)
@@ -179,22 +174,11 @@ make db-migrate # Run migrations
 
 After starting Octobud (using either Docker or local setup):
 
-1. **Login** — Use the default credentials:
-   - Username: `octobud`
-   - Password: `octobud`
-   - **Important:** Change these credentials immediately after first login via the profile avatar dropdown (top right) → "Update credentials"
+1. **Login** — Use default credentials `octobud` / `octobud` and change them immediately after first login (profile avatar → "Update credentials")
 
-2. **Wait for Sync** — The worker will automatically start syncing your GitHub notifications (this may take a few minutes depending on how many notifications you have)
+2. **Wait for Sync** — Notifications sync automatically (may take a few minutes initially)
 
-3. **View the Inbox** — Your notifications appear in the default inbox view
-
-4. **Try Keyboard Shortcuts** — Press `h` to see available shortcuts
-
-5. **Create a View** — Click the "+" in the sidebar to create a custom filtered view
-
-6. **Update Credentials** — Click your profile avatar (top right) → "Update credentials" to change your username and password
-
-7. **Learn the Basics** — Check out the [Basic Usage Guide](basic-usage.md) to learn about actions, queries, views, tags, rules, and keyboard shortcuts
+3. **Get Started** — Press `h` for keyboard shortcuts, check out the [Basic Usage Guide](basic-usage.md) for core features
 
 ---
 
@@ -211,70 +195,23 @@ After starting Octobud (using either Docker or local setup):
 | **Database** | Managed by Docker Compose | Runs in Docker (separate from app) |
 | **Hot Reload** | Yes (dev mode) | Yes (all services) |
 
-## Available Make Commands
+## Common Commands
 
-### Setup & Installation
+**Docker:**
+- `make docker-up-dev` — Start development stack (port 5173)
+- `make docker-up` — Start production stack (port 3000)
+- `make docker-down` — Stop all containers
 
-| Command | Description |
-|---------|-------------|
-| `make setup` | Complete first-time setup (install tools, deps, start DB, run migrations) |
-| `make install-tools` | Install Go tools (goose, sqlc, mockgen) |
-| `make frontend-install` | Install frontend npm dependencies |
-| `make generate` | Generate code (sqlc queries, mocks) |
+**Local Development:**
+- `make setup` — First-time setup (installs tools, dependencies, starts DB)
+- `make backend-dev` — Run backend server
+- `make frontend-dev` — Run frontend dev server
+- `make worker` — Run sync worker
 
-### Docker
-
-| Command | Description |
-|---------|-------------|
-| `make docker-up` | Run production stack (port 3000) |
-| `make docker-up-dev` | Run dev stack with hot reload (port 5173) |
-| `make docker-up-1password` | Run production stack with 1Password token |
-| `make docker-up-dev-1password` | Run dev stack with 1Password token |
-| `make docker-down` | Stop all containers |
-
-### Local Development
-
-| Command | Description |
-|---------|-------------|
-| `make backend-dev` | Run backend server locally |
-| `make frontend-dev` | Run frontend dev server locally |
-| `make worker` | Run GitHub sync worker locally |
-| `make dev` | Run backend server (alias for backend-dev) |
-| `make dev-prompt` | Run backend server with interactive token prompt |
-| `make worker-prompt` | Run worker with interactive token prompt |
-
-### Database
-
-| Command | Description |
-|---------|-------------|
-| `make db-start` | Start PostgreSQL in Docker |
-| `make db-stop` | Stop PostgreSQL |
-| `make db-migrate` | Run database migrations |
-| `make psql` | Open PostgreSQL shell |
-
-### Utilities
-
-| Command | Description |
-|---------|-------------|
-| `make format` | Format Go code |
-| `make test` | Run all tests (backend and frontend) |
-| `make test-backend` | Run backend tests only |
-| `make test-frontend` | Run frontend tests only |
-| `make clean` | Remove built binaries |
-
-### 1Password Integration
-
-If you use 1Password for secrets management:
-
+**1Password Integration:**
 ```bash
-# Production stack
-OP_GH_TOKEN='op://Private/GitHub PAT/token' make docker-up-1password
-
-# Development stack with hot reload
 OP_GH_TOKEN='op://Private/GitHub PAT/token' make docker-up-dev-1password
 ```
-
-This starts the stack with your GitHub token fetched from 1Password.
 
 ## Next Steps
 
@@ -319,10 +256,9 @@ make docker-down
 
 ### Authentication Issues
 
-1. **Server won't start:** `JWT_SECRET` is automatically generated by Docker targets or `make ensure-jwt-secret`. If running locally without Docker, ensure `JWT_SECRET` is set in `.env` or run `make ensure-jwt-secret`
-2. **Can't login:** Default credentials are `octobud` / `octobud` (change these after first login via profile avatar dropdown)
-3. **Token expired:** JWT tokens expire after 7 days by default. Active users stay logged in automatically via token refresh. Inactive users will need to log in again after expiration.
-4. **Forgot password:** If you've lost access, you can reset by deleting the user from the database and restarting the server (it will recreate the default octobud user)
+- **Server won't start:** `JWT_SECRET` auto-generates with Docker or run `make ensure-jwt-secret` for local dev
+- **Can't login:** Default credentials are `octobud` / `octobud`
+- **Token expired:** Active users stay logged in automatically; inactive users (>7 days) need to log in again
 
 ### Frontend Build Issues
 

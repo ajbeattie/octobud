@@ -244,8 +244,8 @@ func TestSupportsTimeline(t *testing.T) {
 		{"pull request no underscore", "pull_request", true},
 		{"issue", "Issue", true},
 		{"issue lowercase", "issue", true},
-		{"discussion", "Discussion", true},
-		{"discussion lowercase", "discussion", true},
+		{"discussion", "Discussion", false},
+		{"discussion lowercase", "discussion", false},
 		{"unsupported type", "Commit", false},
 		{"unsupported type", "Release", false},
 	}

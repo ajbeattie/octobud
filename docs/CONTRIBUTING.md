@@ -214,7 +214,8 @@ docs/
 │   ├── query-syntax.md
 │   ├── keyboard-shortcuts.md
 │   └── views-and-rules.md
-└── architecture/          # Technical deep-dives
+└── architecture/          # Architecture concepts
+    ├── action_hints.md
     ├── query_engine.md
     └── sync.md
 ```
