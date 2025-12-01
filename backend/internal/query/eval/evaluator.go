@@ -214,8 +214,11 @@ func (e *Evaluator) evaluateInCondition(notif *db.Notification, value string) bo
 			!notif.Archived &&
 			!notif.Muted
 	case "filtered":
-		// in:filtered - show only filtered
-		return notif.Filtered
+		// in:filtered - exclude snoozed, archived, muted
+		return notif.Filtered &&
+			!notif.Archived &&
+			(!notif.SnoozedUntil.Valid || notif.SnoozedUntil.Time.Before(time.Now())) &&
+			!notif.Muted
 	case "anywhere":
 		// in:anywhere - show all (no filters)
 		return true

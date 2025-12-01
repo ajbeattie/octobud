@@ -17,7 +17,7 @@
  * Handles background sync and desktop notifications
  */
 
-const SW_VERSION = '1.0.2';
+const SW_VERSION = '1.0.3';
 const CACHE_NAME = `octobud-sw-${SW_VERSION}`;
 const NOTIFICATIONS_URL = '/api/notifications';
 const POLL_NOTIFICATIONS_URL = '/api/notifications/poll'; // Poll endpoint for service worker
@@ -332,7 +332,7 @@ async function fetchNotifications() {
     try {
         const token = await getAuthToken();
         // Use poll endpoint for much smaller payload
-        const url = `${POLL_NOTIFICATIONS_URL}?page=1&pageSize=30&query=${encodeURIComponent(notificationQuery)}`;
+        const url = `${POLL_NOTIFICATIONS_URL}?page=1&pageSize=10&query=${encodeURIComponent(notificationQuery)}`;
         debugLog('[SW] Fetching poll notifications from:', url);
         const response = await fetch(url, {
             credentials: 'include',
@@ -383,6 +383,76 @@ async function areAllWindowsHidden() {
         debugLog('[SW] Window visibility check error:', error);
         // Default to showing notifications if we can't check
         return false;
+    }
+}
+
+// Check if we should show desktop notifications
+// Returns true if:
+// - All windows are hidden, OR
+// - Any visible window is NOT on the inbox route (/views/inbox)
+async function shouldShowDesktopNotifications() {
+    try {
+        const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+        debugLog('[SW] Found', clients.length, 'client window(s)');
+
+        if (clients.length === 0) {
+            debugLog('[SW] No windows found - should show notifications');
+            return true; // No windows = show notifications
+        }
+
+        // Check if all windows are hidden
+        const allHidden = clients.every(client => client.visibilityState === 'hidden');
+        if (allHidden) {
+            debugLog('[SW] All windows hidden - should show notifications');
+            return true;
+        }
+
+        // If any window is visible, check if any visible window is NOT on inbox route
+        const visibleClients = clients.filter(client => client.visibilityState === 'visible');
+        debugLog('[SW] Found', visibleClients.length, 'visible window(s)');
+
+        // Log all client details for debugging
+        const clientDetails = clients.map(client => ({
+            url: client.url,
+            visibilityState: client.visibilityState,
+            focused: client.focused
+        }));
+        debugLog('[SW] All client details:', JSON.stringify(clientDetails, null, 2));
+
+        for (const client of visibleClients) {
+            try {
+                const clientUrl = new URL(client.url);
+                const pathname = clientUrl.pathname;
+                const fullUrl = client.url;
+
+                debugLog('[SW] Checking visible client - full URL:', fullUrl);
+                debugLog('[SW] Checking visible client - pathname:', pathname);
+                debugLog('[SW] Checking visible client - startsWith /views/inbox?', pathname.startsWith('/views/inbox'));
+
+                // If any visible window is NOT on /views/inbox, show notifications
+                // This allows notifications when user is on other views (archive, custom views, etc.)
+                if (!pathname.startsWith('/views/inbox')) {
+                    debugLog('[SW] Visible window not on inbox route:', pathname, '- should show notifications');
+                    return true;
+                } else {
+                    debugLog('[SW] Visible window IS on inbox route:', pathname);
+                }
+            } catch (urlError) {
+                // If we can't parse the URL, be conservative and show notifications
+                console.error('[SW] Failed to parse client URL:', client.url, urlError);
+                debugLog('[SW] Failed to parse client URL:', client.url, '- error:', urlError.message, '- should show notifications');
+                return true;
+            }
+        }
+
+        // All visible windows are on /views/inbox - don't show notifications
+        debugLog('[SW] All visible windows are on inbox route - should NOT show notifications');
+        return false;
+    } catch (error) {
+        console.error('[SW] Failed to check if should show notifications:', error);
+        debugLog('[SW] Error checking notification visibility:', error);
+        // Default to showing notifications if we can't check
+        return true;
     }
 }
 
@@ -642,13 +712,14 @@ async function pollForUpdates() {
             debugLog('[SW] Filtered to', newNotifications.length, 'notifications that are new and should be shown');
 
             if (newNotifications.length > 0) {
-                // Check if all windows are hidden before showing desktop notifications
-                const allWindowsHidden = await areAllWindowsHidden();
-                debugLog('[SW] All windows hidden:', allWindowsHidden);
+                // Check if we should show desktop notifications
+                // Show if: all windows hidden OR any visible window is NOT on inbox route
+                const shouldShow = await shouldShowDesktopNotifications();
+                debugLog('[SW] Should show desktop notifications:', shouldShow);
                 debugLog('[SW] Notifications enabled:', notificationsEnabled);
 
-                // Only show desktop notifications if enabled in settings AND all windows are hidden
-                if (notificationsEnabled && allWindowsHidden) {
+                // Show desktop notifications if enabled in settings AND should show
+                if (notificationsEnabled && shouldShow) {
                     if (newNotifications.length > 3) {
                         // Show summary notification if more than 3
                         debugLog('[SW] Showing summary notification for', newNotifications.length, 'notifications');
@@ -678,24 +749,29 @@ async function pollForUpdates() {
                         }
                     }
                 } else {
-                    // Windows are visible or notifications disabled - don't show but still update state
-                    debugLog('[SW] Not showing notifications - windows visible or disabled.');
+                    // Notifications disabled or shouldn't show (user is on inbox) - don't show but still update state
+                    debugLog('[SW] Not showing notifications - disabled or user viewing inbox.');
                 }
 
                 // Notify clients regardless of notification setting or window visibility
                 // This allows the app to refresh its UI when new notifications appear
                 debugLog('[SW] Notifying clients about', newNotifications.length, 'new notifications');
                 await notifyClients(newNotifications);
+
+                // Update last max effectiveSortDate ONLY when we found new notifications
+                // This ensures we don't advance the timestamp prematurely when polling while window is visible
+                if (currentMaxEffectiveSortDate) {
+                    debugLog('[SW] Updating last max effectiveSortDate to:', currentMaxEffectiveSortDate, '(found new notifications)');
+                    await savePollState(currentMaxEffectiveSortDate);
+                } else {
+                    debugLog('[SW] No effectiveSortDate found in notifications, keeping previous max');
+                }
             } else {
                 debugLog('[SW] No notifications to show after filtering');
-            }
-
-            // Update last max effectiveSortDate
-            if (currentMaxEffectiveSortDate) {
-                debugLog('[SW] Updating last max effectiveSortDate to:', currentMaxEffectiveSortDate);
-                await savePollState(currentMaxEffectiveSortDate);
-            } else {
-                debugLog('[SW] No effectiveSortDate found in notifications, keeping previous max');
+                // Don't update timestamp when no new notifications found
+                // This prevents the timestamp from advancing when the window is visible
+                // and the user has already seen all current notifications
+                debugLog('[SW] Keeping last max effectiveSortDate unchanged (no new notifications)');
             }
         } else {
             // No notifications in inbox - keep the last max date (don't reset it)
@@ -934,19 +1010,6 @@ self.addEventListener('message', async (event) => {
             // Query unchanged, just restart polling if needed
             if (needsPollingRestart) startPolling(true);
         }
-    } else if (event.data.type === 'UPDATE_SORT_DATE') {
-        // Update the latest effectiveSortDate from the main app
-        // This is called when the window comes back into view to ensure
-        // we don't show desktop notifications for items the user has already seen
-        const newSortDate = event.data.effectiveSortDate;
-        if (newSortDate) {
-            debugLog('[SW] Updating lastMaxEffectiveSortDate from main app:', newSortDate);
-            await savePollState(newSortDate);
-        } else {
-            debugLog('[SW] UPDATE_SORT_DATE received but no effectiveSortDate provided');
-        }
-        // Skip immediate poll - this is just a state update
-        if (needsPollingRestart) startPolling(true);
     } else {
         // Unknown message type, but still restart polling if needed
         if (needsPollingRestart) startPolling(true);

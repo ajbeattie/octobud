@@ -23,6 +23,7 @@
 
 	// API error state
 	export let apiError: string | null | undefined;
+	export let apiErrorIsInline: boolean = false; // If true, show error inline instead of full screen
 	export let tags: Tag[] = [];
 
 	// View Header props
@@ -134,7 +135,7 @@
 	}
 </script>
 
-{#if apiError}
+{#if apiError && !apiErrorIsInline}
 	<ApiErrorState errorMessage={apiError} />
 {:else}
 	<section class="flex min-h-0 flex-1 flex-col gap-5 overflow-hidden">
@@ -184,6 +185,7 @@
 				{timelineController}
 				{listPaneWidth}
 				{onPaneResize}
+				apiError={apiErrorIsInline ? apiError : null}
 			/>
 		{:else}
 			<NotificationSingleMode
@@ -206,6 +208,7 @@
 				{detailIsRefreshing}
 				{timelineController}
 				{initialScrollPosition}
+				apiError={apiErrorIsInline ? apiError : null}
 			/>
 		{/if}
 	</section>

@@ -866,6 +866,7 @@
 <NotificationView
 	bind:this={notificationViewComponent}
 	apiError={data.apiError}
+	apiErrorIsInline={data.apiErrorIsInline ?? false}
 	combinedQuery={$quickQuery}
 	canUpdateView={!!$selectedView}
 	onChangeQuery={(newQuery) => quickQuery.set(newQuery)}

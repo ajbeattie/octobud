@@ -13,20 +13,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import { get } from "svelte/store";
 import { browser } from "$app/environment";
 import { goto } from "$app/navigation";
 import { resolve } from "$app/paths";
 import { refreshToken } from "$lib/stores/authStore";
 import { debugLog } from "$lib/utils/debug";
-import { sendMessageToSW } from "$lib/utils/serviceWorkerRegistration";
 import type { NotificationPageController } from "$lib/state/types";
-import type { Readable } from "svelte/store";
-import type { Notification } from "$lib/api/types";
 
 interface ServiceWorkerHandlerParams {
 	getPageController: () => NotificationPageController | null;
-	getPageData: () => Readable<{ items: Notification[] }> | null;
 }
 
 /**
@@ -36,9 +31,9 @@ interface ServiceWorkerHandlerParams {
  *
  * Handles:
  * - Service worker messages (NEW_NOTIFICATIONS, OPEN_NOTIFICATION, TOKEN_EXPIRED)
- * - Page visibility changes (sync notifications and update SW sort date)
+ * - Page visibility changes (sync notifications when page becomes visible)
  *
- * @param params - Functions to get pageController and pageData when available
+ * @param params - Function to get pageController when available
  * @returns Cleanup function to remove event listeners
  */
 export function setupServiceWorkerHandlers(params: ServiceWorkerHandlerParams): () => void {
@@ -46,7 +41,7 @@ export function setupServiceWorkerHandlers(params: ServiceWorkerHandlerParams): 
 		return () => {}; // No-op cleanup
 	}
 
-	const { getPageController, getPageData } = params;
+	const { getPageController } = params;
 
 	// Handle service worker messages
 	const handleSWMessage = async (event: MessageEvent) => {
@@ -102,42 +97,10 @@ export function setupServiceWorkerHandlers(params: ServiceWorkerHandlerParams): 
 	const handleVisibilityChange = async () => {
 		if (!document.hidden) {
 			const pageController = getPageController();
-			const pageDataStore = getPageData();
 
-			if (pageController && pageDataStore) {
-				// First, sync notifications to get the latest state
+			if (pageController) {
+				// Sync notifications to get the latest state
 				await pageController.actions.handleSyncNewNotifications();
-
-				// After syncing, wait 200ms to allow the page to render with the updated state
-				// Then update the service worker's sort date to prevent showing desktop notifications
-				// for items the user has already seen.
-				setTimeout(() => {
-					const currentItems = get(pageDataStore).items;
-					if (currentItems.length > 0) {
-						// Find the maximum effectiveSortDate from the synced page data
-						let maxEffectiveSortDate: string | null = null;
-						for (const notification of currentItems) {
-							const sortDate = notification.effectiveSortDate;
-							if (sortDate) {
-								if (!maxEffectiveSortDate || sortDate > maxEffectiveSortDate) {
-									maxEffectiveSortDate = sortDate;
-								}
-							}
-						}
-
-						// Update service worker's sort date if we found one
-						if (maxEffectiveSortDate) {
-							debugLog(
-								"[App] Window visible - updating SW sort date after sync to:",
-								maxEffectiveSortDate
-							);
-							void sendMessageToSW({
-								type: "UPDATE_SORT_DATE",
-								effectiveSortDate: maxEffectiveSortDate,
-							});
-						}
-					}
-				}, 200);
 			}
 		}
 	};

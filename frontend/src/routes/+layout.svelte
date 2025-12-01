@@ -107,7 +107,6 @@
 	if (browser) {
 		swCleanup = setupServiceWorkerHandlers({
 			getPageController: () => pageControllerRef,
-			getPageData: () => pageControllerRef?.stores.pageData ?? null,
 		});
 	}
 

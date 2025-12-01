@@ -28,6 +28,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/ajbeattie/octobud/backend/internal/api/shared"
+	"github.com/ajbeattie/octobud/backend/internal/core/notification"
 	"github.com/ajbeattie/octobud/backend/internal/models"
 )
 
@@ -57,11 +58,30 @@ func (h *Handler) handleListNotifications(w http.ResponseWriter, r *http.Request
 
 	result, err := h.notifications.ListNotifications(ctx, options)
 	if err != nil {
+		// Check if this is an invalid query error
+		if errors.Is(err, notification.ErrInvalidQuery) {
+			h.logger.Warn(
+				"invalid query in notification list request",
+				zap.String("query", options.Query),
+				zap.Error(err),
+			)
+			// Extract the error message for the client
+			errorMsg := getQueryErrorMessage(err)
+			shared.WriteError(w, http.StatusBadRequest, errorMsg)
+			return
+		}
+
+		// For all listing errors, return 400 with inline error message
+		// This allows the frontend to show the error inline rather than blocking the view
 		h.logger.Error(
 			"failed to load notifications",
 			zap.Error(errors.Join(ErrFailedToLoadNotifications, err)),
 		)
-		shared.WriteError(w, http.StatusInternalServerError, "failed to load notifications")
+		errorMsg := "Failed to load notifications"
+		if err.Error() != "" {
+			errorMsg = err.Error()
+		}
+		shared.WriteError(w, http.StatusBadRequest, errorMsg)
 		return
 	}
 
@@ -263,6 +283,34 @@ func parseIntDefault(raw string) int {
 func parseBoolDefault(raw string) bool {
 	raw = strings.TrimSpace(strings.ToLower(raw))
 	return raw == "true" || raw == "1" || raw == "yes"
+}
+
+// getQueryErrorMessage extracts a user-friendly error message from a query validation error
+func getQueryErrorMessage(err error) string {
+	if err == nil {
+		return "Invalid query"
+	}
+
+	// Try to extract the underlying error message
+	errStr := err.Error()
+
+	// Remove common error prefixes to get cleaner messages
+	errStr = strings.TrimPrefix(errStr, "invalid query: ")
+	errStr = strings.TrimPrefix(errStr, "parse failed: ")
+	errStr = strings.TrimPrefix(errStr, "tokenization failed: ")
+	errStr = strings.TrimPrefix(errStr, "SQL generation failed: ")
+	errStr = strings.TrimPrefix(errStr, "validation failed: ")
+
+	// If the error message is too generic, provide a better one
+	if errStr == "invalid query" ||
+		errStr == "parse failed" ||
+		errStr == "tokenization failed" ||
+		errStr == "SQL generation failed" ||
+		errStr == "validation failed" {
+		return "Invalid query syntax"
+	}
+
+	return errStr
 }
 
 // refreshSubjectData fetches fresh subject data from GitHub and updates the notification

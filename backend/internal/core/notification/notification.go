@@ -30,6 +30,7 @@ import (
 
 // Error definitions
 var (
+	ErrInvalidQuery                      = errors.New("invalid query")
 	ErrFailedToBuildQuery                = errors.New("failed to build query")
 	ErrFailedToListNotifications         = errors.New("failed to list notifications")
 	ErrFailedToIndexRepositories         = errors.New("failed to index repositories")
@@ -54,13 +55,14 @@ func (s *Service) ListNotifications(
 	dbQuery, err := query.BuildQueryWithOptions(opts.Query, limit, offset, opts.IncludeSubject)
 
 	if err != nil {
-		return models.ListDetailsResult{}, err
+		// Wrap query errors in a high-level error type
+		return models.ListDetailsResult{}, errors.Join(ErrInvalidQuery, err)
 	}
 
 	// Execute query
 	result, err := s.queries.ListNotificationsFromQuery(ctx, dbQuery)
 	if err != nil {
-		return models.ListDetailsResult{}, err
+		return models.ListDetailsResult{}, errors.Join(ErrFailedToListNotifications, err)
 	}
 
 	// Index repositories for efficient lookup

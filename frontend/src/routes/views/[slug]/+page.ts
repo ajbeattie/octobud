@@ -227,6 +227,10 @@ export const load: PageLoad = async ({ fetch, params, url, parent }) => {
 	} catch (error) {
 		console.error("Failed to fetch notifications:", error);
 
+		// Extract error message from the error
+		const errorMessage = error instanceof Error ? error.message : "Failed to load notifications";
+
+		// All listing errors should be shown inline (not blocking the whole view)
 		return {
 			views,
 			tags,
@@ -239,7 +243,8 @@ export const load: PageLoad = async ({ fetch, params, url, parent }) => {
 			initialPageNumber: page,
 			initialQuery: currentQuery,
 			viewQuery: viewQuery,
-			apiError: "Unable to connect to the API server",
+			apiError: errorMessage,
+			apiErrorIsInline: true, // Always show listing errors inline
 			tag, // Pass tag if this is a tag view
 		};
 	}

@@ -162,6 +162,16 @@ func TestBuilder_InOperator(t *testing.T) {
 			wantContains: []string{"n.snoozed_until IS NOT NULL", "NOW()", "n.archived = FALSE"},
 		},
 		{
+			name:  "in:filtered",
+			input: "in:filtered",
+			wantContains: []string{
+				"n.filtered = TRUE",
+				"n.archived = FALSE",
+				"snoozed_until",
+				"n.muted = FALSE",
+			},
+		},
+		{
 			name:         "in:anywhere",
 			input:        "in:anywhere",
 			wantContains: []string{"TRUE"},

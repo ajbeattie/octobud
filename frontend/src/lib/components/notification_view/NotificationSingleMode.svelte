@@ -44,6 +44,9 @@
 	// Scroll restoration
 	export let initialScrollPosition: number = 0;
 
+	// Inline error message (for query validation errors)
+	export let apiError: string | null = null;
+
 	// Export list section ref for parent access
 	let listSectionComponent: any = null;
 	export { listSectionComponent };
@@ -77,5 +80,6 @@
 		isSplitView={false}
 		{selectionMap}
 		{initialScrollPosition}
+		{apiError}
 	/>
 {/if}

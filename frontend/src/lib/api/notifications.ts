@@ -240,7 +240,19 @@ export async function fetchNotifications(
 	const url = `/api/notifications?${searchParams.toString()}`;
 	const response = await fetchWithAuth(url, {}, fetchImpl);
 	if (!response.ok) {
-		throw new Error(`Failed to load notifications (${response.status})`);
+		// Try to extract error message from response
+		let errorMessage = `Failed to load notifications (${response.status})`;
+		try {
+			const errorData: { error?: string } = await response.json();
+			if (errorData.error) {
+				errorMessage = errorData.error;
+			}
+		} catch {
+			// If JSON parsing fails, use default message
+		}
+		const error = new Error(errorMessage) as Error & { statusCode?: number };
+		error.statusCode = response.status;
+		throw error;
 	}
 
 	const payload: {

@@ -45,6 +45,9 @@
 	export let listPaneWidth: number;
 	export let onPaneResize: (event: CustomEvent<{ deltaX: number }>) => void;
 
+	// Inline error message (for query validation errors)
+	export let apiError: string | null = null;
+
 	// Export list section ref for parent access
 	let listSectionComponent: any = null;
 	export { listSectionComponent };
@@ -70,6 +73,7 @@
 			{detailNotificationId}
 			isSplitView={true}
 			{selectionMap}
+			{apiError}
 		/>
 	</div>
 

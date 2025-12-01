@@ -126,19 +126,19 @@ func TestHandler_handleListNotifications(t *testing.T) {
 			},
 		},
 		{
-			name:        "service error returns 500",
+			name:        "service error returns 400",
 			queryParams: map[string]string{},
 			setupMock: func(mockSvc *notificationmocks.MockNotificationService) {
 				mockSvc.EXPECT().
 					ListNotifications(gomock.Any(), gomock.Any()).
 					Return(models.ListDetailsResult{}, errors.New("database error"))
 			},
-			expectedStatus: http.StatusInternalServerError,
+			expectedStatus: http.StatusBadRequest,
 			expectedBody: func(t *testing.T, w *httptest.ResponseRecorder) {
 				var response map[string]interface{}
 				err := json.Unmarshal(w.Body.Bytes(), &response)
 				require.NoError(t, err)
-				require.Equal(t, "failed to load notifications", response["error"])
+				require.Equal(t, "database error", response["error"])
 			},
 		},
 	}

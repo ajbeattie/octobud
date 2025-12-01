@@ -217,9 +217,10 @@ func (b *Builder) visitFreeText(node *parse.FreeText) (string, error) {
 
 func (b *Builder) handleInOperator(values []string) (string, error) {
 	// in: operator controls lifecycle filtering
-	// in:inbox - exclude archived, snoozed, muted
+	// in:inbox - exclude archived, snoozed, muted, filtered
 	// in:archive - show only archived (exclude muted)
 	// in:snoozed - show only snoozed (exclude archived, muted)
+	// in:filtered - exclude snoozed, archived, muted
 	// in:anywhere - show all (no lifecycle filters)
 
 	var conditions []string
@@ -240,7 +241,11 @@ func (b *Builder) handleInOperator(values []string) (string, error) {
 				"(n.snoozed_until IS NOT NULL AND n.snoozed_until > NOW() AND n.archived = FALSE AND n.muted = FALSE)",
 			)
 		case queryValueFiltered:
-			conditions = append(conditions, "(n.filtered = TRUE)")
+			conditions = append(
+				conditions,
+				"(n.filtered = TRUE AND n.archived = FALSE AND (n.snoozed_until IS NULL OR n.snoozed_until <= NOW()) "+
+					"AND n.muted = FALSE)",
+			)
 		case "anywhere":
 			// No filter - show all
 			conditions = append(conditions, "TRUE")

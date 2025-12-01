@@ -379,9 +379,47 @@ func TestEvaluator_evaluateInCondition(t *testing.T) {
 		},
 		{
 			"filtered - matches",
-			&db.Notification{Filtered: true},
+			&db.Notification{
+				Filtered:     true,
+				Archived:     false,
+				Muted:        false,
+				SnoozedUntil: sql.NullTime{Valid: false},
+			},
 			"filtered",
 			true,
+		},
+		{
+			"filtered - archived",
+			&db.Notification{
+				Filtered:     true,
+				Archived:     true,
+				Muted:        false,
+				SnoozedUntil: sql.NullTime{Valid: false},
+			},
+			"filtered",
+			false,
+		},
+		{
+			"filtered - muted",
+			&db.Notification{
+				Filtered:     true,
+				Archived:     false,
+				Muted:        true,
+				SnoozedUntil: sql.NullTime{Valid: false},
+			},
+			"filtered",
+			false,
+		},
+		{
+			"filtered - snoozed",
+			&db.Notification{
+				Filtered:     true,
+				Archived:     false,
+				Muted:        false,
+				SnoozedUntil: sql.NullTime{Valid: true, Time: now.Add(1 * time.Hour)},
+			},
+			"filtered",
+			false,
 		},
 		{
 			"anywhere - always matches",
