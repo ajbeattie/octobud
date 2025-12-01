@@ -17,7 +17,7 @@
  * Handles background sync and desktop notifications
  */
 
-const SW_VERSION = '1.0.1';
+const SW_VERSION = '1.0.2';
 const CACHE_NAME = `octobud-sw-${SW_VERSION}`;
 const NOTIFICATIONS_URL = '/api/notifications';
 const POLL_NOTIFICATIONS_URL = '/api/notifications/poll'; // Poll endpoint for service worker

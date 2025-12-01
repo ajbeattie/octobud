@@ -122,9 +122,18 @@ func main() {
 
 // setCacheHeaders sets appropriate Cache-Control headers based on file type
 func setCacheHeaders(w http.ResponseWriter, path string) {
-	// HTML files (index.html, sw.js) - use no-cache to allow revalidation
+	// Service worker file - no caching at all to ensure immediate updates
+	if path == "sw.js" {
+		// no-store prevents any caching, ensuring the service worker is always fetched fresh
+		w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+		w.Header().Set("Pragma", "no-cache")
+		w.Header().Set("Expires", "0")
+		return
+	}
+
+	// HTML files (index.html) - use no-cache to allow revalidation
 	// This ensures fresh CSP headers while still allowing browser caching for performance
-	if strings.HasSuffix(path, ".html") || path == "sw.js" {
+	if strings.HasSuffix(path, ".html") {
 		// no-cache means "revalidate before using" - allows caching but ensures fresh content
 		w.Header().Set("Cache-Control", "no-cache, must-revalidate")
 		return
