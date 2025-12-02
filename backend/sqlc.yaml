@@ -1,0 +1,31 @@
+version: "2"
+
+sql:
+  - engine: "postgresql"
+    schema: "migrations"
+    queries: "internal/db/queries"
+    gen:
+      go:
+        package: "db"
+        out: "internal/db"
+        sql_package: "database/sql"
+        overrides:
+          - db_type: "pg_catalog.bool"
+            nullable: true
+            go_type: "database/sql.NullBool"
+          - db_type: "pg_catalog.varchar"
+            nullable: true
+            go_type: "database/sql.NullString"
+          - db_type: "pg_catalog.text"
+            nullable: true
+            go_type: "database/sql.NullString"
+          - db_type: "timestamptz"
+            nullable: true
+            go_type: "database/sql.NullTime"
+          - db_type: "pg_catalog.int8"
+            nullable: true
+            go_type: "database/sql.NullInt64"
+          - db_type: "pg_catalog.int4"
+            nullable: true
+            go_type: "database/sql.NullInt32"
+

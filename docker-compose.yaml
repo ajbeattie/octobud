@@ -1,0 +1,93 @@
+# Production docker-compose
+# Usage: cp .env.example .env && edit .env && make docker-up
+#    or: OP_GH_TOKEN='op://...' make docker-up-1password
+#
+# For development with hot reloading:
+#   make docker-up-dev
+#
+# SECURITY NOTE: Default Database Credentials
+# This configuration uses default PostgreSQL credentials (postgres:postgres).
+# The database port (5432) is bound to 127.0.0.1 (localhost only) by default.
+# These defaults are fine for:
+#   - Local development on your machine
+#   - Single-user deployments on localhost
+#
+# You SHOULD change these credentials AND port binding if:
+#   - Your deployment needs database access from other machines on the network
+#   - You're deploying on a VPS, cloud instance, or home lab server
+#   - Multiple users have access to the deployment environment
+#
+# To change credentials, update POSTGRES_USER and POSTGRES_PASSWORD environment
+# variables in the postgres service, and update DATABASE_URL in all services.
+# To allow network access, change the port mapping from "127.0.0.1:5432:5432" to "5432:5432"
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: octobud
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - ~/databases/octobud:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d octobud" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  migrations:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.migrations
+    restart: "no"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/octobud?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/octobud?sslmode=disable
+      - SERVER_ADDR=:8080
+      - GH_TOKEN=${GH_TOKEN}
+      - JWT_SECRET=${JWT_SECRET}
+    expose:
+      - "8080"
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.worker
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/octobud?sslmode=disable
+      - GH_TOKEN=${GH_TOKEN}
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+
+  frontend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile.web
+    restart: unless-stopped
+    environment:
+      - API_URL=http://backend:8080
+    command: [ "-addr", ":3000", "-api", "http://backend:8080" ]
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_started

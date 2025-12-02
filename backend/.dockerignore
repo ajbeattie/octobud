@@ -1,0 +1,36 @@
+# Development files
+*.md
+*.log
+.git
+.gitignore
+.env
+.env.*
+
+# Build artifacts
+server
+worker
+goose-migrations
+coverage.out
+
+# IDE files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test files (optional - remove if you want to include tests in the image)
+*_test.go
+
+# Documentation
+docs/
+scripts/
+
+# Docker files
+Dockerfile*
+docker-compose*.yml
+
