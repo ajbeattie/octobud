@@ -130,7 +130,7 @@ reset-default-user:
 
 # Run production stack with Docker
 docker-up: ensure-jwt-secret
-	@if [ -z "$$GH_TOKEN" ]; then \
+	@if [ -z "$$GH_TOKEN" ] && ! grep -q '^GH_TOKEN=.' .env 2>/dev/null; then \
 		echo "Warning: GH_TOKEN not set. Sync will not work."; \
 		echo "Set GH_TOKEN in .env file (cp .env.example .env)"; \
 	fi
@@ -141,7 +141,7 @@ docker-up: ensure-jwt-secret
 
 # Run development stack with hot reload
 docker-up-dev: ensure-jwt-secret
-	@if [ -z "$$GH_TOKEN" ]; then \
+	@if [ -z "$$GH_TOKEN" ] && ! grep -q '^GH_TOKEN=.' .env 2>/dev/null; then \
 		echo "Warning: GH_TOKEN not set. Sync will not work."; \
 		echo "Set GH_TOKEN in .env file (cp .env.example .env)"; \
 	fi
