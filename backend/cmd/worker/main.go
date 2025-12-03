@@ -196,7 +196,7 @@ func main() {
 	river.AddWorker(workers, jobs.NewSyncNotificationsWorker(logger, syncService, riverClient))
 	river.AddWorker(
 		workers,
-		jobs.NewSyncOlderNotificationsWorker(logger, syncService, githubClient, riverClient),
+		jobs.NewSyncOlderNotificationsWorker(logger, syncService, riverClient),
 	)
 	river.AddWorker(workers, jobs.NewProcessNotificationWorker(dbConn, syncService))
 	river.AddWorker(workers, jobs.NewApplyRuleWorker(queries))

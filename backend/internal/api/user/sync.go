@@ -237,28 +237,51 @@ func (h *Handler) HandleSyncOlder(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
-	// Get current sync state to find oldest_notification_synced_at
-	state, err := h.syncStateSvc.GetSyncState(ctx)
-	if err != nil {
-		h.logger.Error("failed to get sync state", zap.Error(err))
-		shared.WriteError(w, http.StatusInternalServerError, "Internal server error")
-		return
-	}
+	var untilTime time.Time
 
-	// Check if we have an oldest notification timestamp
-	if !state.OldestNotificationSyncedAt.Valid {
-		shared.WriteError(
-			w,
-			http.StatusBadRequest,
-			"No notifications have been synced yet. Complete initial setup first.",
-		)
-		return
-	}
+	// If BeforeDate is provided, use it as the until time (override)
+	if req.BeforeDate != nil && *req.BeforeDate != "" {
+		parsedTime, err := time.Parse(time.RFC3339, *req.BeforeDate)
+		if err != nil {
+			h.logger.Debug(
+				"failed to parse beforeDate",
+				zap.String("beforeDate", *req.BeforeDate),
+				zap.Error(err),
+			)
+			shared.WriteError(
+				w,
+				http.StatusBadRequest,
+				"beforeDate must be in RFC3339 format (e.g., 2024-01-15T00:00:00Z)",
+			)
+			return
+		}
+		untilTime = parsedTime
+		h.logger.Info("using provided beforeDate override",
+			zap.Time("beforeDate", untilTime))
+	} else {
+		// Fall back to oldest_notification_synced_at from sync state
+		state, err := h.syncStateSvc.GetSyncState(ctx)
+		if err != nil {
+			h.logger.Error("failed to get sync state", zap.Error(err))
+			shared.WriteError(w, http.StatusInternalServerError, "Internal server error")
+			return
+		}
 
-	untilTime := state.OldestNotificationSyncedAt.Time
+		// Check if we have an oldest notification timestamp
+		if !state.OldestNotificationSyncedAt.Valid {
+			shared.WriteError(
+				w,
+				http.StatusBadRequest,
+				"No notifications have been synced yet. Complete initial setup first, or provide a beforeDate.",
+			)
+			return
+		}
+
+		untilTime = state.OldestNotificationSyncedAt.Time
+	}
 
 	// Queue the sync older job
-	_, err = h.riverClient.Insert(ctx, jobs.SyncOlderNotificationsArgs{
+	_, err := h.riverClient.Insert(ctx, jobs.SyncOlderNotificationsArgs{
 		Days:       req.Days,
 		UntilTime:  untilTime,
 		MaxCount:   req.MaxCount,
@@ -275,7 +298,8 @@ func (h *Handler) HandleSyncOlder(w http.ResponseWriter, r *http.Request) {
 		zap.Int("days", req.Days),
 		zap.Time("untilTime", untilTime),
 		zap.Any("maxCount", req.MaxCount),
-		zap.Bool("unreadOnly", req.UnreadOnly))
+		zap.Bool("unreadOnly", req.UnreadOnly),
+		zap.Bool("usedBeforeDateOverride", req.BeforeDate != nil && *req.BeforeDate != ""))
 
 	w.WriteHeader(http.StatusAccepted)
 }

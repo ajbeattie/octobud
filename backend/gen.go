@@ -17,7 +17,6 @@
 package backend
 
 //go:generate mockgen -destination=internal/github/mocks/mock_client.go -package=mocks github.com/ajbeattie/octobud/backend/internal/github/interfaces Client
-//go:generate mockgen -destination=internal/github/mock_client_test.go -package=github -source=internal/github/client.go Client
 //go:generate mockgen -source=internal/db/store.go -destination=internal/db/mocks/mock_store.go -package=mocks
 //go:generate mockgen -source=internal/core/notification/service.go -destination=internal/core/notification/mocks/mock_service.go -package=mocks
 //go:generate mockgen -source=internal/core/rules/service.go -destination=internal/core/rules/mocks/mock_service.go -package=mocks

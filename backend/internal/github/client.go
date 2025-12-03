@@ -119,9 +119,14 @@ func (c *clientImpl) GetAuthHeaders() map[string]string {
 
 // FetchNotifications retrieves notification threads updated since the given instant.
 // When since is nil, GitHub returns the default notification window (typically 90 days).
+// When before is nil, no upper bound is applied.
+// When unreadOnly is false (the safe default), all=true is sent to GitHub to fetch all notifications.
+// When unreadOnly is true, all=false is sent to only fetch unread notifications.
 func (c *clientImpl) FetchNotifications(
 	ctx context.Context,
 	since *time.Time,
+	before *time.Time,
+	unreadOnly bool,
 ) ([]types.NotificationThread, error) {
 	perPage := c.perPage
 	if perPage <= 0 {
@@ -129,21 +134,29 @@ func (c *clientImpl) FetchNotifications(
 	}
 
 	var (
-		all  []types.NotificationThread
-		page = 1
+		allNotifications []types.NotificationThread
+		page             = 1
 	)
+
+	// all=true fetches all notifications (read and unread)
+	// all=false fetches only unread notifications
+	// We invert unreadOnly to get the 'all' parameter value
+	fetchAll := !unreadOnly
 
 	for {
 		// Build URL with query parameters
-		// Always include all=true to fetch all notifications including read ones
 		url := fmt.Sprintf(
-			"%s/notifications?all=true&per_page=%d&page=%d",
+			"%s/notifications?all=%t&per_page=%d&page=%d",
 			c.baseURL,
+			fetchAll,
 			perPage,
 			page,
 		)
 		if since != nil {
 			url += "&since=" + since.UTC().Format(time.RFC3339)
+		}
+		if before != nil {
+			url += "&before=" + before.UTC().Format(time.RFC3339)
 		}
 
 		req, err := http.NewRequestWithContext(ctx, "GET", url, http.NoBody)
@@ -196,7 +209,7 @@ func (c *clientImpl) FetchNotifications(
 			pageItems[i].Raw = raw
 		}
 
-		all = append(all, pageItems...)
+		allNotifications = append(allNotifications, pageItems...)
 
 		if len(pageItems) < perPage {
 			break
@@ -205,7 +218,7 @@ func (c *clientImpl) FetchNotifications(
 		page++
 	}
 
-	return all, nil
+	return allNotifications, nil
 }
 
 // FetchSubjectRaw retrieves the raw JSON payload for a notification subject.

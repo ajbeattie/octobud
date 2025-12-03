@@ -129,7 +129,14 @@ func (s *Service) FetchNotificationsToSync(
 		zap.Bool("isInitialSync", syncCtx.IsInitialSync))
 
 	// Fetch from GitHub
-	threads, err := s.client.FetchNotifications(ctx, syncCtx.SinceTimestamp)
+	// Pass UnreadOnly to control whether to fetch all or only unread notifications
+	// Regular sync has no upper bound (before=nil)
+	threads, err := s.client.FetchNotifications(
+		ctx,
+		syncCtx.SinceTimestamp,
+		nil,
+		syncCtx.UnreadOnly,
+	)
 	if err != nil {
 		s.logger.Error("failed to fetch notifications from GitHub", zap.Error(err))
 		return nil, errors.Join(ErrFailedToFetchNotifications, err)
@@ -144,6 +151,42 @@ func (s *Service) FetchNotificationsToSync(
 		threads = applyInitialSyncLimitsFromContext(threads, syncCtx)
 		s.logger.Info("applied initial sync limits",
 			zap.Int("countAfterLimits", len(threads)))
+	}
+
+	return threads, nil
+}
+
+// FetchOlderNotificationsToSync fetches notifications older than the specified until time.
+// This is used for backfilling older notifications that weren't included in initial sync.
+func (s *Service) FetchOlderNotificationsToSync(
+	ctx context.Context,
+	since time.Time,
+	until time.Time,
+	maxCount *int,
+	unreadOnly bool,
+) ([]types.NotificationThread, error) {
+	s.logger.Info("fetching older notifications from GitHub",
+		zap.Time("since", since),
+		zap.Time("until", until),
+		zap.Any("maxCount", maxCount),
+		zap.Bool("unreadOnly", unreadOnly))
+
+	// Fetch from GitHub with since and before parameters
+	// The GitHub API handles the time range filtering for us
+	threads, err := s.client.FetchNotifications(ctx, &since, &until, unreadOnly)
+	if err != nil {
+		s.logger.Error("failed to fetch older notifications from GitHub", zap.Error(err))
+		return nil, errors.Join(ErrFailedToFetchNotifications, err)
+	}
+
+	s.logger.Info("fetched notifications from GitHub",
+		zap.Int("count", len(threads)))
+
+	// Apply max count limit if specified
+	if maxCount != nil && len(threads) > *maxCount {
+		threads = threads[:*maxCount]
+		s.logger.Info("applied max count limit",
+			zap.Int("afterMaxCount", len(threads)))
 	}
 
 	return threads, nil

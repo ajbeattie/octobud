@@ -233,20 +233,20 @@
 								on:click={() => handleDaysChange(days)}
 								class="relative rounded-xl border-2 px-4 py-3 text-center transition-all cursor-pointer {selectedOption ===
 								days
-									? 'border-violet-500 bg-violet-50 ring-1 ring-violet-500 dark:border-violet-400 dark:bg-violet-500/10 dark:ring-violet-400'
+									? 'border-indigo-500 bg-indigo-50 ring-1 ring-indigo-500 dark:border-indigo-400 dark:bg-indigo-500/10 dark:ring-indigo-400'
 									: 'border-gray-200 bg-gray-50 hover:border-gray-300 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800/50 dark:hover:border-gray-600 dark:hover:bg-gray-700/50'}"
 								disabled={isSubmitting}
 							>
 								<span
 									class="block text-lg font-semibold {selectedOption === days
-										? 'text-violet-600 dark:text-violet-400'
+										? 'text-indigo-600 dark:text-indigo-400'
 										: 'text-gray-900 dark:text-white'}"
 								>
 									{days}
 								</span>
 								<span
 									class="block text-xs {selectedOption === days
-										? 'text-violet-500 dark:text-violet-400'
+										? 'text-indigo-500 dark:text-indigo-400'
 										: 'text-gray-500 dark:text-gray-400'}"
 								>
 									days
@@ -258,20 +258,20 @@
 							on:click={() => handleDaysChange("all")}
 							class="relative rounded-xl border-2 px-4 py-3 text-center transition-all cursor-pointer {selectedOption ===
 							'all'
-								? 'border-violet-500 bg-violet-50 ring-1 ring-violet-500 dark:border-violet-400 dark:bg-violet-500/10 dark:ring-violet-400'
+								? 'border-indigo-500 bg-indigo-50 ring-1 ring-indigo-500 dark:border-indigo-400 dark:bg-indigo-500/10 dark:ring-indigo-400'
 								: 'border-gray-200 bg-gray-50 hover:border-gray-300 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800/50 dark:hover:border-gray-600 dark:hover:bg-gray-700/50'}"
 							disabled={isSubmitting}
 						>
 							<span
 								class="block text-lg font-semibold {selectedOption === 'all'
-									? 'text-violet-600 dark:text-violet-400'
+									? 'text-indigo-600 dark:text-indigo-400'
 									: 'text-gray-900 dark:text-white'}"
 							>
 								All
 							</span>
 							<span
 								class="block text-xs {selectedOption === 'all'
-									? 'text-violet-500 dark:text-violet-400'
+									? 'text-indigo-500 dark:text-indigo-400'
 									: 'text-gray-500 dark:text-gray-400'}"
 							>
 								time
@@ -285,13 +285,13 @@
 						on:click={() => handleDaysChange("custom")}
 						class="mt-3 w-full rounded-xl border-2 px-4 py-3 text-left transition-all cursor-pointer {selectedOption ===
 						'custom'
-							? 'border-violet-500 bg-violet-50 ring-1 ring-violet-500 dark:border-violet-400 dark:bg-violet-500/10 dark:ring-violet-400'
+							? 'border-indigo-500 bg-indigo-50 ring-1 ring-indigo-500 dark:border-indigo-400 dark:bg-indigo-500/10 dark:ring-indigo-400'
 							: 'border-gray-200 bg-gray-50 hover:border-gray-300 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800/50 dark:hover:border-gray-600 dark:hover:bg-gray-700/50'}"
 						disabled={isSubmitting}
 					>
 						<span
 							class="text-sm font-medium {selectedOption === 'custom'
-								? 'text-violet-600 dark:text-violet-400'
+								? 'text-indigo-600 dark:text-indigo-400'
 								: 'text-gray-700 dark:text-gray-300'}"
 						>
 							Custom number of days
@@ -307,7 +307,7 @@
 								placeholder="Enter number of days"
 								bind:value={customDays}
 								disabled={isSubmitting}
-								class="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder-gray-400 transition-colors focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500 dark:focus:border-violet-400 dark:focus:ring-violet-400"
+								class="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder-gray-400 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400"
 							/>
 						</div>
 					{/if}
@@ -383,27 +383,45 @@
 								placeholder="No limit"
 								bind:value={maxNotifications}
 								disabled={isSubmitting}
-								class="mt-2 w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-400 transition-colors focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500 dark:focus:border-violet-400 dark:focus:ring-violet-400"
+								class="mt-2 w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-400 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400"
 							/>
 						</div>
 
-						<!-- Unread only -->
-						<label class="flex cursor-pointer items-start gap-3">
-							<input
-								type="checkbox"
-								bind:checked={syncUnreadOnly}
-								disabled={isSubmitting}
-								class="mt-1 h-4 w-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500 dark:border-gray-600 dark:bg-gray-700"
-							/>
+						<!-- Unread only toggle -->
+						<div class="flex items-center justify-between gap-4">
 							<div>
-								<span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-									Only unread notifications
-								</span>
-								<p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-									Skip notifications you've already read on GitHub
+								<span
+									id="unread-only-label"
+									class="text-sm font-medium text-gray-700 dark:text-gray-300"
+									>Only unread notifications</span
+								>
+								<p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+									Only sync messages marked unread in GitHub. <span class="font-medium"
+										>Not recommended for most users.</span
+									>
 								</p>
 							</div>
-						</label>
+							<button
+								type="button"
+								role="switch"
+								aria-checked={syncUnreadOnly}
+								aria-labelledby="unread-only-label"
+								disabled={isSubmitting}
+								on:click={() => (syncUnreadOnly = !syncUnreadOnly)}
+								class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 {syncUnreadOnly
+									? 'bg-indigo-600'
+									: 'bg-gray-200 dark:bg-gray-600'} {isSubmitting
+									? 'opacity-50 cursor-not-allowed'
+									: ''}"
+							>
+								<span
+									aria-hidden="true"
+									class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out {syncUnreadOnly
+										? 'translate-x-5'
+										: 'translate-x-0'}"
+								></span>
+							</button>
+						</div>
 					</div>
 				</details>
 			</div>
@@ -421,7 +439,7 @@
 				<button
 					type="submit"
 					disabled={isSubmitting}
-					class="order-1 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-6 py-2.5 text-sm font-semibold text-white transition-all hover:from-indigo-500 hover:to-violet-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-gray-950 sm:order-2 cursor-pointer"
+					class="order-1 inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white transition-all hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-gray-950 sm:order-2 cursor-pointer"
 				>
 					{#if isSubmitting}
 						<svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">

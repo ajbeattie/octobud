@@ -59,9 +59,10 @@ type SyncSettingsRequest struct {
 
 // SyncOlderRequest represents the request to sync older notifications
 type SyncOlderRequest struct {
-	Days       int  `json:"days"`                 // Required: number of days to sync back
-	MaxCount   *int `json:"maxCount,omitempty"`   // Optional: maximum notifications to sync
-	UnreadOnly bool `json:"unreadOnly,omitempty"` // Optional: only sync unread notifications
+	Days       int     `json:"days"`                 // Required: number of days to sync back
+	MaxCount   *int    `json:"maxCount,omitempty"`   // Optional: maximum notifications to sync
+	UnreadOnly bool    `json:"unreadOnly,omitempty"` // Optional: only sync unread notifications
+	BeforeDate *string `json:"beforeDate,omitempty"` // Optional: override the "before" date (RFC3339 format)
 }
 
 // SyncStateResponse represents the sync state information for the frontend

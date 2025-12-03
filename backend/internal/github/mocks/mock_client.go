@@ -59,18 +59,18 @@ func (mr *MockClientMockRecorder) FetchIssueComments(ctx, owner, repo, number, p
 }
 
 // FetchNotifications mocks base method.
-func (m *MockClient) FetchNotifications(ctx context.Context, since *time.Time) ([]types.NotificationThread, error) {
+func (m *MockClient) FetchNotifications(ctx context.Context, since, before *time.Time, unreadOnly bool) ([]types.NotificationThread, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FetchNotifications", ctx, since)
+	ret := m.ctrl.Call(m, "FetchNotifications", ctx, since, before, unreadOnly)
 	ret0, _ := ret[0].([]types.NotificationThread)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FetchNotifications indicates an expected call of FetchNotifications.
-func (mr *MockClientMockRecorder) FetchNotifications(ctx, since any) *gomock.Call {
+func (mr *MockClientMockRecorder) FetchNotifications(ctx, since, before, unreadOnly any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchNotifications", reflect.TypeOf((*MockClient)(nil).FetchNotifications), ctx, since)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchNotifications", reflect.TypeOf((*MockClient)(nil).FetchNotifications), ctx, since, before, unreadOnly)
 }
 
 // FetchPullRequestReviews mocks base method.

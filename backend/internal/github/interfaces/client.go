@@ -28,7 +28,17 @@ import (
 // Client defines the interface for GitHub API operations.
 type Client interface {
 	SetToken(ctx context.Context, token string) error
-	FetchNotifications(ctx context.Context, since *time.Time) ([]types.NotificationThread, error)
+	// FetchNotifications retrieves notification threads from GitHub.
+	// - since: only fetch notifications updated after this time (nil = use GitHub default window)
+	// - before: only fetch notifications updated before this time (nil = no upper bound)
+	// - unreadOnly: when true, only fetch unread notifications (all=false in GitHub API)
+	//   The safe default is false, which fetches all notifications (all=true in GitHub API)
+	FetchNotifications(
+		ctx context.Context,
+		since *time.Time,
+		before *time.Time,
+		unreadOnly bool,
+	) ([]types.NotificationThread, error)
 	FetchSubjectRaw(ctx context.Context, subjectURL string) (json.RawMessage, error)
 	FetchTimeline(
 		ctx context.Context,

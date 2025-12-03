@@ -58,6 +58,21 @@ func (mr *MockSyncOperationsMockRecorder) FetchNotificationsToSync(ctx, syncCtx 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchNotificationsToSync", reflect.TypeOf((*MockSyncOperations)(nil).FetchNotificationsToSync), ctx, syncCtx)
 }
 
+// FetchOlderNotificationsToSync mocks base method.
+func (m *MockSyncOperations) FetchOlderNotificationsToSync(ctx context.Context, since, until time.Time, maxCount *int, unreadOnly bool) ([]types.NotificationThread, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FetchOlderNotificationsToSync", ctx, since, until, maxCount, unreadOnly)
+	ret0, _ := ret[0].([]types.NotificationThread)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FetchOlderNotificationsToSync indicates an expected call of FetchOlderNotificationsToSync.
+func (mr *MockSyncOperationsMockRecorder) FetchOlderNotificationsToSync(ctx, since, until, maxCount, unreadOnly any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchOlderNotificationsToSync", reflect.TypeOf((*MockSyncOperations)(nil).FetchOlderNotificationsToSync), ctx, since, until, maxCount, unreadOnly)
+}
+
 // GetSyncContext mocks base method.
 func (m *MockSyncOperations) GetSyncContext(ctx context.Context) (sync.SyncContext, error) {
 	m.ctrl.T.Helper()

@@ -24,7 +24,6 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/ajbeattie/octobud/backend/internal/db"
-	githubinterfaces "github.com/ajbeattie/octobud/backend/internal/github/interfaces"
 	"github.com/ajbeattie/octobud/backend/internal/sync"
 )
 
@@ -56,24 +55,21 @@ func (SyncOlderNotificationsArgs) InsertOpts() river.InsertOpts {
 // This job fetches notifications from a specific time range and queues processing jobs.
 type SyncOlderNotificationsWorker struct {
 	river.WorkerDefaults[SyncOlderNotificationsArgs]
-	logger       *zap.Logger
-	syncService  sync.SyncOperations
-	githubClient githubinterfaces.Client
-	riverClient  db.RiverClient
+	logger      *zap.Logger
+	syncService sync.SyncOperations
+	riverClient db.RiverClient
 }
 
 // NewSyncOlderNotificationsWorker creates a new SyncOlderNotificationsWorker.
 func NewSyncOlderNotificationsWorker(
 	logger *zap.Logger,
 	syncService sync.SyncOperations,
-	githubClient githubinterfaces.Client,
 	client db.RiverClient,
 ) *SyncOlderNotificationsWorker {
 	return &SyncOlderNotificationsWorker{
-		logger:       logger,
-		syncService:  syncService,
-		githubClient: githubClient,
-		riverClient:  client,
+		logger:      logger,
+		syncService: syncService,
+		riverClient: client,
 	}
 }
 
@@ -95,46 +91,23 @@ func (w *SyncOlderNotificationsWorker) Work(
 		zap.Any("maxCount", args.MaxCount),
 		zap.Bool("unreadOnly", args.UnreadOnly))
 
-	// Fetch notifications from GitHub with since parameter
-	threads, err := w.githubClient.FetchNotifications(ctx, &since)
+	// Fetch older notifications using the sync service
+	// The service handles GitHub API calls and filtering
+	threads, err := w.syncService.FetchOlderNotificationsToSync(
+		ctx,
+		since,
+		args.UntilTime,
+		args.MaxCount,
+		args.UnreadOnly,
+	)
 	if err != nil {
-		w.logger.Error("failed to fetch notifications from GitHub",
+		w.logger.Error("failed to fetch older notifications",
 			zap.Int64("jobID", job.ID),
 			zap.Error(err))
 		return err
 	}
 
-	w.logger.Info("fetched notifications from GitHub",
-		zap.Int64("jobID", job.ID),
-		zap.Int("rawCount", len(threads)))
-
-	// Filter to only include notifications older than UntilTime
-	// (to avoid re-syncing notifications we already have)
-	filtered := threads[:0] // Reuse slice capacity
-	for _, thread := range threads {
-		// Only include if UpdatedAt is before the until cutoff
-		if thread.UpdatedAt.Before(args.UntilTime) {
-			// Apply unread filter if specified
-			if args.UnreadOnly && !thread.Unread {
-				continue
-			}
-			filtered = append(filtered, thread)
-		}
-	}
-
-	w.logger.Info("filtered notifications by time range",
-		zap.Int64("jobID", job.ID),
-		zap.Int("afterFilter", len(filtered)))
-
-	// Apply max count limit if specified
-	if args.MaxCount != nil && len(filtered) > *args.MaxCount {
-		filtered = filtered[:*args.MaxCount]
-		w.logger.Info("applied max count limit",
-			zap.Int64("jobID", job.ID),
-			zap.Int("afterMaxCount", len(filtered)))
-	}
-
-	if len(filtered) == 0 {
+	if len(threads) == 0 {
 		w.logger.Info("no older notifications found in time range",
 			zap.Int64("jobID", job.ID))
 		return nil
@@ -142,13 +115,13 @@ func (w *SyncOlderNotificationsWorker) Work(
 
 	w.logger.Info("queuing older notifications for processing",
 		zap.Int64("jobID", job.ID),
-		zap.Int("count", len(filtered)))
+		zap.Int("count", len(threads)))
 
 	// Track the oldest notification for updating sync state
 	var oldestNotification time.Time
 
 	// Queue individual processing jobs for each notification
-	for _, thread := range filtered {
+	for _, thread := range threads {
 		threadData, err := json.Marshal(thread)
 		if err != nil {
 			w.logger.Warn("failed to marshal notification thread",

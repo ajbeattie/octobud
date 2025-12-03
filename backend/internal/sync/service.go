@@ -72,6 +72,20 @@ type SyncOperations interface { //nolint:revive // exported type name stutters w
 		syncCtx SyncContext,
 	) ([]types.NotificationThread, error)
 
+	// FetchOlderNotificationsToSync fetches notifications older than the specified until time.
+	// This is used for backfilling older notifications that weren't included in initial sync.
+	// - since: fetch notifications updated after this time
+	// - until: only include notifications updated before this time (filters out newer ones)
+	// - maxCount: optional limit on number of notifications to return
+	// - unreadOnly: when true, only fetch unread notifications from GitHub API
+	FetchOlderNotificationsToSync(
+		ctx context.Context,
+		since time.Time,
+		until time.Time,
+		maxCount *int,
+		unreadOnly bool,
+	) ([]types.NotificationThread, error)
+
 	// UpdateSyncStateAfterProcessing updates sync state after notifications are processed.
 	UpdateSyncStateAfterProcessing(ctx context.Context, latestUpdate time.Time) error
 

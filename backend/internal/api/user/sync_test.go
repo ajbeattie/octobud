@@ -498,6 +498,58 @@ func TestHandler_HandleSyncOlder(t *testing.T) {
 			expectedStatus: http.StatusAccepted,
 		},
 		{
+			name: "success with beforeDate override",
+			requestBody: SyncOlderRequest{
+				Days:       30,
+				BeforeDate: stringPtr("2024-02-01T12:00:00Z"),
+			},
+			setupContext: func(req *http.Request) *http.Request {
+				ctx := auth.SetUsernameInContext(req.Context(), "admin")
+				return req.WithContext(ctx)
+			},
+			setupHandler: func(h *Handler, ctrl *gomock.Controller) {
+				// No sync state query needed when using beforeDate override
+				mockSyncState := syncstatemocks.NewMockSyncStateService(ctrl)
+				h.syncStateSvc = mockSyncState
+
+				expectedUntilTime := time.Date(2024, 2, 1, 12, 0, 0, 0, time.UTC)
+				mockRiver := dbmocks.NewMockRiverClient(ctrl)
+				mockRiver.EXPECT().Insert(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
+					func(_ context.Context, args jobs.SyncOlderNotificationsArgs, _ *river.InsertOpts) (*rivertype.JobInsertResult, error) {
+						require.Equal(t, 30, args.Days)
+						require.Equal(t, expectedUntilTime, args.UntilTime)
+						return &rivertype.JobInsertResult{}, nil
+					})
+				h.riverClient = mockRiver
+			},
+			expectedStatus: http.StatusAccepted,
+		},
+		{
+			name: "invalid beforeDate format returns 400",
+			requestBody: SyncOlderRequest{
+				Days:       30,
+				BeforeDate: stringPtr("invalid-date"),
+			},
+			setupContext: func(req *http.Request) *http.Request {
+				ctx := auth.SetUsernameInContext(req.Context(), "admin")
+				return req.WithContext(ctx)
+			},
+			setupHandler: func(h *Handler, ctrl *gomock.Controller) {
+				mockSyncState := syncstatemocks.NewMockSyncStateService(ctrl)
+				h.syncStateSvc = mockSyncState
+
+				mockRiver := dbmocks.NewMockRiverClient(ctrl)
+				h.riverClient = mockRiver
+			},
+			expectedStatus: http.StatusBadRequest,
+			expectedBody: func(t *testing.T, w *httptest.ResponseRecorder) {
+				var response map[string]string
+				err := json.Unmarshal(w.Body.Bytes(), &response)
+				require.NoError(t, err)
+				require.Contains(t, response["error"], "RFC3339")
+			},
+		},
+		{
 			name: "success with minimal request",
 			requestBody: SyncOlderRequest{
 				Days: 60,

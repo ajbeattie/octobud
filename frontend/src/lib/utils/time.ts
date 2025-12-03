@@ -106,3 +106,20 @@ export function formatRelativeShort(date: Date): string {
 	const absYears = Math.floor(absDays / 365);
 	return `${absYears}y ${suffix}`;
 }
+
+/**
+ * Convert an RFC3339/ISO date string to the format expected by datetime-local inputs.
+ * Returns the date in local timezone as YYYY-MM-DDTHH:mm format.
+ */
+export function toLocalDatetime(rfc3339: string): string {
+	if (!rfc3339) return "";
+	const timestamp = Date.parse(rfc3339);
+	const date = new Date(timestamp);
+	// Format as YYYY-MM-DDTHH:mm for datetime-local input (in local timezone)
+	const year = date.getFullYear();
+	const month = String(date.getMonth() + 1).padStart(2, "0");
+	const day = String(date.getDate()).padStart(2, "0");
+	const hours = String(date.getHours()).padStart(2, "0");
+	const minutes = String(date.getMinutes()).padStart(2, "0");
+	return `${year}-${month}-${day}T${hours}:${minutes}`;
+}

@@ -92,7 +92,7 @@ func TestFetchNotificationsToSync_InitialSync(t *testing.T) {
 
 	mockClient := githubmocks.NewMockClient(ctrl)
 	mockClient.EXPECT().
-		FetchNotifications(gomock.Any(), gomock.Any()).
+		FetchNotifications(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(notifications, nil)
 
 	// FetchNotificationsToSync is a pure function - no DB calls expected
@@ -138,8 +138,8 @@ func TestFetchNotificationsToSync_WithExistingState(t *testing.T) {
 	var capturedSince *time.Time
 	mockClient := githubmocks.NewMockClient(ctrl)
 	mockClient.EXPECT().
-		FetchNotifications(gomock.Any(), gomock.Any()).
-		DoAndReturn(func(_ context.Context, since *time.Time) ([]types.NotificationThread, error) {
+		FetchNotifications(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(_ context.Context, since *time.Time, _ *time.Time, _ bool) ([]types.NotificationThread, error) {
 			capturedSince = since
 			return notifications, nil
 		})
@@ -176,7 +176,7 @@ func TestFetchNotificationsToSync_EmptyResults(t *testing.T) {
 
 	mockClient := githubmocks.NewMockClient(ctrl)
 	mockClient.EXPECT().
-		FetchNotifications(gomock.Any(), gomock.Any()).
+		FetchNotifications(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 		Return([]types.NotificationThread{}, nil)
 
 	// FetchNotificationsToSync is a pure function - no DB calls expected
@@ -207,7 +207,7 @@ func TestFetchNotificationsToSync_ClientError(t *testing.T) {
 
 	mockClient := githubmocks.NewMockClient(ctrl)
 	mockClient.EXPECT().
-		FetchNotifications(gomock.Any(), gomock.Any()).
+		FetchNotifications(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(nil, errors.New("API error"))
 
 	// FetchNotificationsToSync is a pure function - no DB calls expected

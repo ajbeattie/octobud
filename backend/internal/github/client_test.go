@@ -287,7 +287,12 @@ func TestFetchNotifications(t *testing.T) {
 			client := newTestClient(server.URL)
 			client.token = testToken
 
-			notifications, err := client.FetchNotifications(context.Background(), tt.since)
+			notifications, err := client.FetchNotifications(
+				context.Background(),
+				tt.since,
+				nil,
+				false,
+			)
 
 			if tt.wantErr {
 				require.Error(t, err)
@@ -329,7 +334,7 @@ func TestFetchNotifications_Pagination(t *testing.T) {
 	client.token = testToken
 	client.perPage = 2 // Set perPage to match our test data
 
-	notifications, err := client.FetchNotifications(context.Background(), nil)
+	notifications, err := client.FetchNotifications(context.Background(), nil, nil, false)
 
 	require.NoError(t, err)
 	require.Len(t, notifications, 3)
@@ -352,7 +357,7 @@ func TestFetchNotifications_RawFieldPopulated(t *testing.T) {
 	client := newTestClient(server.URL)
 	client.token = testToken
 
-	notifications, err := client.FetchNotifications(context.Background(), nil)
+	notifications, err := client.FetchNotifications(context.Background(), nil, nil, false)
 
 	require.NoError(t, err)
 	require.Len(t, notifications, 1)
@@ -363,6 +368,99 @@ func TestFetchNotifications_RawFieldPopulated(t *testing.T) {
 	err = json.Unmarshal(notifications[0].Raw, &rawData)
 	require.NoError(t, err)
 	require.Equal(t, "123", rawData["id"])
+}
+
+func TestFetchNotifications_UnreadOnlyParameter(t *testing.T) {
+	tests := []struct {
+		name        string
+		unreadOnly  bool
+		expectedAll string // Expected value of "all" query param
+	}{
+		{
+			name:        "unreadOnly=false sends all=true",
+			unreadOnly:  false,
+			expectedAll: "all=true",
+		},
+		{
+			name:        "unreadOnly=true sends all=false",
+			unreadOnly:  true,
+			expectedAll: "all=false",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := httptest.NewServer(
+				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					require.Contains(t, r.URL.RawQuery, tt.expectedAll,
+						"expected %s in query string, got: %s", tt.expectedAll, r.URL.RawQuery)
+					w.WriteHeader(http.StatusOK)
+					_, _ = w.Write([]byte(`[]`))
+				}),
+			)
+			defer server.Close()
+
+			client := newTestClient(server.URL)
+			client.token = testToken
+
+			_, err := client.FetchNotifications(context.Background(), nil, nil, tt.unreadOnly)
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestFetchNotifications_BeforeParameter(t *testing.T) {
+	beforeTime := time.Date(2024, 1, 15, 12, 0, 0, 0, time.UTC)
+
+	tests := []struct {
+		name           string
+		before         *time.Time
+		expectBefore   bool
+		expectedBefore string
+	}{
+		{
+			name:         "before=nil does not include before param",
+			before:       nil,
+			expectBefore: false,
+		},
+		{
+			name:           "before time is included in query",
+			before:         &beforeTime,
+			expectBefore:   true,
+			expectedBefore: "before=2024-01-15T12:00:00Z",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := httptest.NewServer(
+				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if tt.expectBefore {
+						require.Contains(
+							t,
+							r.URL.RawQuery,
+							tt.expectedBefore,
+							"expected %s in query string, got: %s",
+							tt.expectedBefore,
+							r.URL.RawQuery,
+						)
+					} else {
+						require.NotContains(t, r.URL.RawQuery, "before=",
+							"did not expect before param, got: %s", r.URL.RawQuery)
+					}
+					w.WriteHeader(http.StatusOK)
+					_, _ = w.Write([]byte(`[]`))
+				}),
+			)
+			defer server.Close()
+
+			client := newTestClient(server.URL)
+			client.token = testToken
+
+			_, err := client.FetchNotifications(context.Background(), nil, tt.before, false)
+			require.NoError(t, err)
+		})
+	}
 }
 
 func TestFetchSubjectRaw(t *testing.T) {
@@ -857,7 +955,7 @@ func TestFetchNotifications_ContextCancellation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel() // Cancel immediately
 
-	_, err := client.FetchNotifications(ctx, nil)
+	_, err := client.FetchNotifications(ctx, nil, nil, false)
 	require.Error(t, err)
 }
 
@@ -870,7 +968,7 @@ func TestRequestHeaders(t *testing.T) {
 		{
 			name: "FetchNotifications sets correct headers",
 			fetchMethod: func(client *clientImpl, _ *httptest.Server) error {
-				_, err := client.FetchNotifications(context.Background(), nil)
+				_, err := client.FetchNotifications(context.Background(), nil, nil, false)
 				return err
 			},
 			expectedURL: "/notifications",

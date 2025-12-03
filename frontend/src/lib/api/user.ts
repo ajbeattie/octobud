@@ -295,6 +295,7 @@ export interface SyncOlderRequest {
 	days: number;
 	maxCount?: number | null;
 	unreadOnly?: boolean;
+	beforeDate?: string | null; // RFC3339 format date to override the "before" cutoff
 }
 
 export async function syncOlderNotifications(

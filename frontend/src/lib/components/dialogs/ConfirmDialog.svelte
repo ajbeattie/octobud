@@ -97,7 +97,7 @@
 					class={`rounded-full px-4 py-2 text-sm font-semibold text-white transition disabled:opacity-50 cursor-pointer ${
 						confirmTone === "danger"
 							? "bg-rose-500 hover:bg-rose-400"
-							: "bg-gray-600 dark:bg-gray-500 hover:bg-gray-700 dark:hover:bg-gray-400"
+							: "bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-400"
 					}`}
 					on:click={onConfirm}
 					disabled={confirming}
