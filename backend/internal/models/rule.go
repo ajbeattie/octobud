@@ -41,7 +41,7 @@ type Rule struct {
 type CreateRuleParams struct {
 	Name            string
 	Description     *string
-	Query           string
+	Query           *string
 	ViewID          *string
 	Actions         RuleActions
 	Enabled         *bool

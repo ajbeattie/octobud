@@ -79,7 +79,7 @@ func (h *Handler) Register(r chi.Router) {
 type createRuleRequest struct {
 	Name            string      `json:"name"`
 	Description     *string     `json:"description"`
-	Query           string      `json:"query"`
+	Query           *string     `json:"query,omitempty"`
 	ViewID          *string     `json:"viewId,omitempty"`
 	Actions         RuleActions `json:"actions"`
 	Enabled         *bool       `json:"enabled"`
@@ -146,13 +146,12 @@ func (h *Handler) handleCreateRule(w http.ResponseWriter, r *http.Request) {
 	}
 
 	req.Name = strings.TrimSpace(req.Name)
-	queryStr := strings.TrimSpace(req.Query)
 
 	// Convert request to service params
 	params := models.CreateRuleParams{
 		Name:            req.Name,
 		Description:     req.Description,
-		Query:           queryStr,
+		Query:           req.Query,
 		ViewID:          req.ViewID,
 		Actions:         req.Actions,
 		Enabled:         req.Enabled,
@@ -173,6 +172,7 @@ func (h *Handler) handleCreateRule(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, rulescore.ErrNameRequired) ||
 			errors.Is(err, rulescore.ErrQueryOrViewIDRequired) ||
 			errors.Is(err, rulescore.ErrQueryAndViewIDMutuallyExclusive) ||
+			errors.Is(err, rulescore.ErrQueryCannotBeEmpty) ||
 			errors.Is(err, rulescore.ErrInvalidViewID) {
 			shared.WriteError(w, http.StatusBadRequest, err.Error())
 			return

@@ -315,7 +315,7 @@ func TestHandler_handleCreateRule(t *testing.T) {
 			name: "success creates rule",
 			requestBody: createRuleRequest{
 				Name:    "Test Rule",
-				Query:   "is:unread",
+				Query:   stringPtr("is:unread"),
 				Actions: RuleActions{SkipInbox: true},
 			},
 			setupMock: func(m *mocks.MockStore, _ *mocks.MockRiverClient) {
@@ -361,7 +361,7 @@ func TestHandler_handleCreateRule(t *testing.T) {
 			name: "name required error returns 400",
 			requestBody: createRuleRequest{
 				Name:  "",
-				Query: "is:unread",
+				Query: stringPtr("is:unread"),
 			},
 			setupMock: func(_ *mocks.MockStore, _ *mocks.MockRiverClient) {
 				// No mock needed - validation happens before service call
@@ -378,7 +378,7 @@ func TestHandler_handleCreateRule(t *testing.T) {
 			name: "already exists error returns 409",
 			requestBody: createRuleRequest{
 				Name:    "Test Rule",
-				Query:   "is:unread",
+				Query:   stringPtr("is:unread"),
 				Actions: RuleActions{},
 			},
 			setupMock: func(m *mocks.MockStore, _ *mocks.MockRiverClient) {
@@ -400,7 +400,7 @@ func TestHandler_handleCreateRule(t *testing.T) {
 			name: "applyToExisting with riverClient queues job",
 			requestBody: createRuleRequest{
 				Name:            "Test Rule",
-				Query:           "is:unread",
+				Query:           stringPtr("is:unread"),
 				Actions:         RuleActions{},
 				ApplyToExisting: true,
 			},
@@ -441,7 +441,7 @@ func TestHandler_handleCreateRule(t *testing.T) {
 			name: "service error returns 500",
 			requestBody: createRuleRequest{
 				Name:    "Test Rule",
-				Query:   "is:unread",
+				Query:   stringPtr("is:unread"),
 				Actions: RuleActions{},
 			},
 			setupMock: func(m *mocks.MockStore, _ *mocks.MockRiverClient) {

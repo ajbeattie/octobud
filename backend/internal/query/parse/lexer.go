@@ -106,7 +106,7 @@ func (l *Lexer) nextToken() (Token, error) {
 		word := l.readWord()
 		return l.classifyWord(word, pos), nil
 	default:
-		if unicode.IsLetter(l.ch) || unicode.IsDigit(l.ch) {
+		if isWordChar(l.ch) {
 			word := l.readWord()
 			return l.classifyWord(word, pos), nil
 		}
@@ -212,5 +212,6 @@ func (l *Lexer) classifyWord(word string, pos int) Token {
 func isWordChar(ch rune) bool {
 	return unicode.IsLetter(ch) || unicode.IsDigit(ch) || ch == '-' || ch == '_' || ch == '/' ||
 		ch == '.' ||
-		ch == '@'
+		ch == '@' ||
+		ch == '[' || ch == ']'
 }

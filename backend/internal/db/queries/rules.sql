@@ -39,8 +39,14 @@ RETURNING *;
 UPDATE rules
 SET name = COALESCE(sqlc.narg('name'), name),
     description = COALESCE(sqlc.narg('description'), description),
-    query = COALESCE(sqlc.narg('query'), query),
-    view_id = COALESCE(sqlc.narg('view_id'), view_id),
+    query = CASE
+        WHEN sqlc.narg('clear_query')::boolean = true THEN NULL
+        ELSE COALESCE(sqlc.narg('query'), query)
+    END,
+    view_id = CASE
+        WHEN sqlc.narg('clear_view_id')::boolean = true THEN NULL
+        ELSE COALESCE(sqlc.narg('view_id'), view_id)
+    END,
     enabled = COALESCE(sqlc.narg('enabled'), enabled),
     actions = COALESCE(sqlc.narg('actions'), actions),
     updated_at = NOW()

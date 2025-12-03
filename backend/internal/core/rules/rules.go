@@ -104,11 +104,9 @@ func (s *Service) CreateRule(
 		return models.Rule{}, ErrNameRequired
 	}
 
-	queryStr := strings.TrimSpace(params.Query)
-
 	// Validate that exactly one of query or viewId is provided
-	hasQuery := queryStr != ""
-	hasViewID := params.ViewID != nil && *params.ViewID != ""
+	hasQuery := params.Query != nil
+	hasViewID := params.ViewID != nil
 
 	if !hasQuery && !hasViewID {
 		return models.Rule{}, ErrQueryOrViewIDRequired
@@ -119,10 +117,16 @@ func (s *Service) CreateRule(
 	}
 
 	var viewID sql.NullInt64
+	var queryStr string
 
 	if hasViewID {
+		viewIDStr := strings.TrimSpace(*params.ViewID)
+		if viewIDStr == "" {
+			return models.Rule{}, ErrInvalidViewID
+		}
+
 		// Validate and parse viewID
-		viewIDInt, err := strconv.ParseInt(*params.ViewID, 10, 64)
+		viewIDInt, err := strconv.ParseInt(viewIDStr, 10, 64)
 		if err != nil {
 			return models.Rule{}, ErrInvalidViewID
 		}
@@ -138,6 +142,10 @@ func (s *Service) CreateRule(
 
 		viewID = sql.NullInt64{Int64: viewIDInt, Valid: true}
 	} else {
+		queryStr = strings.TrimSpace(*params.Query)
+		if queryStr == "" {
+			return models.Rule{}, ErrQueryCannotBeEmpty
+		}
 		// Validate the query by attempting to parse and validate it
 		if _, err := query.ParseAndValidate(queryStr); err != nil {
 			return models.Rule{}, errors.Join(ErrInvalidQuery, err)
@@ -223,11 +231,13 @@ func (s *Service) UpdateRule(
 			return models.Rule{}, errors.Join(ErrInvalidQuery, err)
 		}
 		dbParams.Query = sql.NullString{String: queryStr, Valid: true}
+		// Clear viewId when setting query (mutual exclusivity)
+		dbParams.ClearViewID = sql.NullBool{Bool: true, Valid: true}
 	}
 	if params.ViewID != nil {
 		viewIDStr := strings.TrimSpace(*params.ViewID)
 		if viewIDStr == "" {
-			dbParams.ViewID = sql.NullInt64{Valid: false}
+			dbParams.ClearViewID = sql.NullBool{Bool: true, Valid: true}
 		} else {
 			viewIDInt, err := strconv.ParseInt(viewIDStr, 10, 64)
 			if err != nil {
@@ -242,6 +252,8 @@ func (s *Service) UpdateRule(
 				return models.Rule{}, errors.Join(ErrFailedToVerifyView, err)
 			}
 			dbParams.ViewID = sql.NullInt64{Int64: viewIDInt, Valid: true}
+			// Clear query when setting viewId (mutual exclusivity)
+			dbParams.ClearQuery = sql.NullBool{Bool: true, Valid: true}
 		}
 	}
 	if params.Actions != nil {

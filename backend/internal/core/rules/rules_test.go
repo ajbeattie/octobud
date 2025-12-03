@@ -301,7 +301,7 @@ func TestService_CreateRule(t *testing.T) {
 			name: "success creates rule with query",
 			params: models.CreateRuleParams{
 				Name:    "My Rule",
-				Query:   "is:unread",
+				Query:   stringPtr("is:unread"),
 				Actions: models.RuleActions{SkipInbox: true},
 			},
 			setupMock: func(m *mocks.MockStore, params models.CreateRuleParams) {
@@ -315,7 +315,7 @@ func TestService_CreateRule(t *testing.T) {
 				expectedRule := db.Rule{
 					ID:           1,
 					Name:         params.Name,
-					Query:        sql.NullString{String: params.Query, Valid: true},
+					Query:        sql.NullString{String: *params.Query, Valid: true},
 					Actions:      actionsJSON,
 					Enabled:      true,
 					DisplayOrder: 100,
@@ -375,7 +375,7 @@ func TestService_CreateRule(t *testing.T) {
 			name: "empty name returns error before DB call",
 			params: models.CreateRuleParams{
 				Name:    "",
-				Query:   "is:unread",
+				Query:   stringPtr("is:unread"),
 				Actions: models.RuleActions{},
 			},
 			setupMock: func(_ *mocks.MockStore, _ models.CreateRuleParams) {
@@ -390,7 +390,7 @@ func TestService_CreateRule(t *testing.T) {
 			name: "neither query nor viewID returns error",
 			params: models.CreateRuleParams{
 				Name:    "My Rule",
-				Query:   "",
+				Query:   nil,
 				ViewID:  nil,
 				Actions: models.RuleActions{},
 			},
@@ -406,7 +406,7 @@ func TestService_CreateRule(t *testing.T) {
 			name: "both query and viewID returns error",
 			params: models.CreateRuleParams{
 				Name:    "My Rule",
-				Query:   "is:unread",
+				Query:   stringPtr("is:unread"),
 				ViewID:  stringPtr("1"),
 				Actions: models.RuleActions{},
 			},
@@ -454,7 +454,7 @@ func TestService_CreateRule(t *testing.T) {
 			name: "error wrapping database failure",
 			params: models.CreateRuleParams{
 				Name:    "My Rule",
-				Query:   "is:unread",
+				Query:   stringPtr("is:unread"),
 				Actions: models.RuleActions{},
 			},
 			setupMock: func(m *mocks.MockStore, _ models.CreateRuleParams) {

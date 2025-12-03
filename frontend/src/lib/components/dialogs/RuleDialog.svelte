@@ -153,7 +153,7 @@
 
 			if (ruleMode === "view") {
 				payload.viewId = selectedViewId;
-				payload.query = ""; // Empty query when using viewId
+				// Don't include query in payload - let the view provide it
 			} else {
 				payload.query = query.trim();
 			}

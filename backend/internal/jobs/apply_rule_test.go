@@ -350,8 +350,11 @@ func TestApplyRuleWorker_QueryBuildError(t *testing.T) {
 		ID:      ruleID,
 		Name:    "Test Rule",
 		Enabled: true,
-		Query:   sql.NullString{String: "invalid query syntax [[[", Valid: true},
-		ViewID:  sql.NullInt64{Valid: false},
+		Query: sql.NullString{
+			String: "badfield:value",
+			Valid:  true,
+		}, // Unknown field causes build error
+		ViewID: sql.NullInt64{Valid: false},
 	}
 
 	job := &river.Job[ApplyRuleArgs]{

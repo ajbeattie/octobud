@@ -293,6 +293,10 @@
 				</p>
 			</div>
 			<div class="rounded-lg bg-gray-100/50 dark:bg-gray-800/50 px-3 py-2">
+				<code class="text-indigo-600 dark:text-indigo-300">-author:[bot]</code>
+				<p class="mt-1 text-xs text-gray-600 dark:text-gray-400">Exclude all [bot] authors</p>
+			</div>
+			<div class="rounded-lg bg-gray-100/50 dark:bg-gray-800/50 px-3 py-2">
 				<code class="text-indigo-600 dark:text-indigo-300">reason:mention,comment state:open</code>
 				<p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
 					Mentions or comments on open items

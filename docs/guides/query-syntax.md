@@ -207,6 +207,14 @@ type:PullRequest merged:true
 author:dependabot type:PullRequest
 ```
 
+### Exclude all bot authors
+
+```
+-author:[bot]
+```
+
+**Note:** GitHub bot usernames end with `[bot]` (e.g., `dependabot[bot]`, `renovate[bot]`). Using `[bot]` matches all bots without catching human users with "bot" in their name.
+
 ### Notifications with a specific tag
 
 ```

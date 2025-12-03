@@ -244,6 +244,16 @@ func TestLexer_SpecialChars(t *testing.T) {
 			input: "email:user@example.com",
 			valid: true,
 		},
+		{
+			name:  "brackets in value for bot names",
+			input: "author:dependabot[bot]",
+			valid: true,
+		},
+		{
+			name:  "brackets only in value",
+			input: "author:[bot]",
+			valid: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -311,6 +321,14 @@ func TestLexer_ComplexQueries(t *testing.T) {
 		{
 			name:  "deeply nested",
 			input: "((repo:cli AND is:unread) OR (in:snoozed AND repo:other)) AND NOT author:bot",
+		},
+		{
+			name:  "exclude bot authors with brackets",
+			input: "-author:[bot]",
+		},
+		{
+			name:  "multiple bot exclusions with brackets",
+			input: "-author:dependabot[bot],renovate[bot]",
 		},
 	}
 

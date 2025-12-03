@@ -230,19 +230,27 @@ const updateRule = `-- name: UpdateRule :one
 UPDATE rules
 SET name = COALESCE($1, name),
     description = COALESCE($2, description),
-    query = COALESCE($3, query),
-    view_id = COALESCE($4, view_id),
-    enabled = COALESCE($5, enabled),
-    actions = COALESCE($6, actions),
+    query = CASE
+        WHEN $3::boolean = true THEN NULL
+        ELSE COALESCE($4, query)
+    END,
+    view_id = CASE
+        WHEN $5::boolean = true THEN NULL
+        ELSE COALESCE($6, view_id)
+    END,
+    enabled = COALESCE($7, enabled),
+    actions = COALESCE($8, actions),
     updated_at = NOW()
-WHERE id = $7
+WHERE id = $9
 RETURNING id, name, description, query, enabled, actions, display_order, created_at, updated_at, view_id
 `
 
 type UpdateRuleParams struct {
 	Name        sql.NullString
 	Description sql.NullString
+	ClearQuery  sql.NullBool
 	Query       sql.NullString
+	ClearViewID sql.NullBool
 	ViewID      sql.NullInt64
 	Enabled     sql.NullBool
 	Actions     pqtype.NullRawMessage
@@ -253,7 +261,9 @@ func (q *Queries) UpdateRule(ctx context.Context, arg UpdateRuleParams) (Rule, e
 	row := q.db.QueryRowContext(ctx, updateRule,
 		arg.Name,
 		arg.Description,
+		arg.ClearQuery,
 		arg.Query,
+		arg.ClearViewID,
 		arg.ViewID,
 		arg.Enabled,
 		arg.Actions,
