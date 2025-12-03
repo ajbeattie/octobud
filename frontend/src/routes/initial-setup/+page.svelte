@@ -475,7 +475,7 @@
 
 		<!-- Footer note -->
 		<p class="mt-8 text-center text-xs text-gray-400 dark:text-gray-500">
-			You can sync past notifications later from the settings page.
+			You can sync additional history later from the settings page.
 		</p>
 	</div>
 </div>

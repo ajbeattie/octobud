@@ -26,7 +26,7 @@ When you first log in, you'll configure how far back Octobud should sync your ex
 
 ### Syncing More Later
 
-From **Settings → Sync Past Notifications**, you can sync older notifications beyond your initial import. This syncs notifications *before* your oldest synced notification, so you won't re-sync what you already have.
+From **Settings → Sync additional history**, you can sync older notifications beyond your initial import. This syncs notifications *before* your oldest synced notification, so you won't re-sync what you already have.
 
 ## Core Workflow
 
